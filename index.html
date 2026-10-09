@@ -15,7 +15,7 @@
   --bg:#EDF1EE; --surface:#FFFFFF; --sunk:#E3E9E5; --ink:#17201D; --muted:#5A6863; --line:#D3DCD7;
   --mat:#D4DFD9; --fig:#22302B; --fig-far:#A3B3AD;
   --accent:#C92C66; --accent-far:#E9A3BC; --accent-ink:#FFFFFF;
-  --rest:#0C849C; --prep:#A86B12;
+  --rest:#0C849C; --prep:#A86B12; --prop:#BCCAC3;
   --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
   --r:14px;
@@ -24,13 +24,13 @@
   --bg:#0E1312; --surface:#171F1D; --sunk:#111816; --ink:#E4ECE9; --muted:#93A39E; --line:#28332F;
   --mat:#222E2A; --fig:#DCE6E2; --fig-far:#5A6C66;
   --accent:#FF5A92; --accent-far:#8A3653; --accent-ink:#1A0610;
-  --rest:#3FC2D9; --prep:#E9AC45; color-scheme:dark;
+  --rest:#3FC2D9; --prep:#E9AC45; --prop:#3A4A45; color-scheme:dark;
 }}
 :root[data-theme="dark"]{
   --bg:#0E1312; --surface:#171F1D; --sunk:#111816; --ink:#E4ECE9; --muted:#93A39E; --line:#28332F;
   --mat:#222E2A; --fig:#DCE6E2; --fig-far:#5A6C66;
   --accent:#FF5A92; --accent-far:#8A3653; --accent-ink:#1A0610;
-  --rest:#3FC2D9; --prep:#E9AC45; color-scheme:dark;
+  --rest:#3FC2D9; --prep:#E9AC45; --prop:#3A4A45; color-scheme:dark;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -88,7 +88,22 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .fg .hl{stroke:var(--accent)} .fg .hlf{stroke:var(--accent-far)}
 .fg .hd{fill:var(--fig)} .fg .hdh{fill:var(--accent)}
 .fg .ar{stroke:var(--accent);stroke-width:2.6}
-.mat{fill:var(--mat)}
+.mat{fill:var(--mat)} .prop{fill:var(--prop)} .ball{fill:var(--prep)}
+.jump{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;gap:8px;padding-block:10px;background:var(--bg);margin-top:10px;overflow-x:auto}
+.jump a{flex:none;text-decoration:none;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:14px;font-weight:700}
+.jump a:hover{border-color:var(--muted)}
+.prog-h{margin-top:26px;scroll-margin-top:64px}
+.prog-h h2{font:700 28px/1.05 var(--display);text-transform:uppercase;letter-spacing:.01em}
+.prog-h p{margin:6px 0 0;color:var(--muted);font-size:15px;max-width:62ch}
+.prog-h+.today{margin-top:14px}
+.badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:1px 8px;border:1px solid currentColor;color:var(--prep);vertical-align:2px;margin-left:6px;white-space:nowrap}
+.info{margin-top:10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.info h4{margin:0 0 6px;font-size:16px}
+.info ol,.info ul{margin:0;padding-left:20px}
+.info li{margin:4px 0;max-width:62ch}
+.info.alert{border:2px solid var(--accent)}
+.info.alert h4{color:var(--accent)}
+.sec-end{height:1px;background:var(--line);margin-top:34px}
 
 /* log */
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:22px}
@@ -230,7 +245,7 @@ textarea{width:100%;margin-top:12px;border:1px solid var(--line);background:var(
   <div class="pl-body">
     <div class="pl-stage">
       <span class="pl-pos" id="pl-pos"></span>
-      <svg viewBox="-130 -100 248 112" class="fg" aria-hidden="true"><rect class="mat" x="-126" y="0.5" width="240" height="6" rx="3"/><g id="pl-fig"></g></svg>
+      <svg viewBox="-130 -100 248 112" class="fg" id="pl-svg" aria-hidden="true"><g id="pl-fig"></g></svg>
     </div>
     <div class="pl-info">
       <div>
@@ -347,7 +362,7 @@ function arrowSVG(a, J, t, ha){
   const pulse = .5 + .5*Math.sin(t*4.2);
   const op = (ha*(.55 + .45*pulse)).toFixed(2);
   if (a.rot){
-    const c = J.head, r = 16, a0 = 50, a1 = 130, pts = [];
+    const c = a.at ? J[a.at] : J.head, r = a.at ? 13 : 16, a0 = 50, a1 = 130, pts = [];
     for (let i=0;i<=12;i++) pts.push(pt(c, a0+(a1-a0)*i/12, r));
     const end = a.rot > 0 ? pts[0] : pts[12], prev = a.rot > 0 ? pts[2] : pts[10];
     const dir = ang(prev, end), w1 = pt(end, dir+150, 5), w2 = pt(end, dir-150, 5);
@@ -359,7 +374,21 @@ function arrowSVG(a, J, t, ha){
   return `<path class="ar" opacity="${op}" d="M${P(p0)}L${P(p1)}M${P(w1)}L${P(p1)}L${P(w2)}"/>`;
 }
 const VB = '-130 -100 248 112';
-const thumbSVG = pose => `<svg viewBox="${VB}" class="fg" aria-hidden="true"><rect class="mat" x="-126" y="0.5" width="240" height="6" rx="3"/>${figSVG(pose, 1.2)}</svg>`;
+const vbOf = ex => (ex && ex.vb) || VB;
+function stageSVG(ex, p, t){
+  const [x, , w] = vbOf(ex).split(' ').map(Number);
+  let s = `<rect class="mat" x="${x+4}" y="0.5" width="${w-8}" height="6" rx="3"/>`;
+  for (const pr of (ex && ex.props) || []){
+    if (pr.t === 'wall') s += `<rect class="prop" x="${pr.x}" y="${-pr.h}" width="7" height="${pr.h+0.5}"/>`;
+    else if (pr.t === 'box') s += `<rect class="prop" x="${pr.x}" y="${-pr.h}" width="${pr.w}" height="${pr.h+0.5}" rx="3"/>`;
+    else if (pr.t === 'ball'){
+      const up = pt(p.hip, p.torso, L.T*p.e.t*.72), c = pt(up, p.torso-90, 14.5);
+      s += `<circle class="ball" cx="${c[0].toFixed(1)}" cy="${(-c[1]).toFixed(1)}" r="6.5"/>`;
+    }
+  }
+  return s + figSVG(p, t);
+}
+const thumbSVG = (ex, pose) => `<svg viewBox="${vbOf(ex)}" class="fg" aria-hidden="true">${stageSVG(ex, pose, 1.2)}</svg>`;
 
 /* ================= poses ================= */
 const HOOK = {ik:[44,5], bend:1}, HOOKF = {ik:[45,5], bend:1};
@@ -368,6 +397,11 @@ const PRO = o => Object.assign({hip:[0,6], torso:180, head:180, face:-90, aN:[1,
 const QUAD = o => Object.assign({hip:[0,41], sh:[-46,49], head:186, face:-95,
   aN:{ik:[-46,1], bend:1}, aF:{ik:[-48,1], bend:1}, lN:{ik:[34,5], bend:-1}, lF:{ik:[33,5], bend:-1}, fN:0}, o);
 const HANDS_HEAD = {ik:[-64,6], bend:-1};
+const KNEEL_REST = {hip:[0,16], torso:92, head:96, face:180, aN:{ik:[-20,22], bend:1}, aF:{ik:[-18,23], bend:1}, lN:[198.9,0], lF:[198,0], fN:0};
+const KNEEL_FOLD = {hip:[2,15], torso:186, head:193, face:-95, aN:[183,183], aF:[184,184], ext:{aN:1.05, aF:1.05}, lN:[198.9,0], lF:[198,0], fN:0,
+  hi:['aN','aF','t'], arrows:[{at:'handN', dir:180}]};
+const STAND = o => Object.assign({hip:[0,72], torso:84, head:90, face:180, aN:[-100,-96], aF:[-98,-94],
+  lN:{ik:[-12,4], bend:-1}, lF:{ik:[-10,4], bend:-1}, fN:180}, o);
 
 /* ================= exercises (from the physio sheet) ================= */
 const EX = [
@@ -460,10 +494,62 @@ const EX = [
  {id:15, pos:'Sarokülés', name:'Nyújtózás sarokülésben',
   how:'Sarokülésből hajolj előre, homlok a talaj felé, és nyújtózz a karjaiddal előre.',
   kind:'hold', d:{n:3,s:30},
-  P:{rest:{hip:[0,16], torso:92, head:96, face:180, aN:{ik:[-20,22], bend:1}, aF:{ik:[-18,23], bend:1}, lN:[198.9,0], lF:[198,0], fN:0},
-     A:{hip:[2,15], torso:186, head:193, face:-95, aN:[183,183], aF:[184,184], ext:{aN:1.05, aF:1.05}, lN:[198.9,0], lF:[198,0], fN:0,
-       hi:['aN','aF','t'], arrows:[{at:'handN', dir:180}]}}},
+  P:{rest:KNEEL_REST, A:KNEEL_FOLD}},
+ {id:16, pos:'Állva', name:'Labdás hengerezés a falnál', extra:'kiegészítés',
+  how:'Háttal a falnak, egy kis érdes labda a lapockáid között, a gerinc mellett (ne közvetlenül a csigolyákon). Térdhajlítással lassan görgesd le-fel a labdát a feszes ponton. Ez a gyógytornász korábbi gyakorlata volt, a lapon nem szerepelt; az adagot egyeztesd vele.',
+  kind:'reps', cycle:true, d:{n:1,r:12}, seq:[['A',2.5,.4],['rest',2.5,.4]], cue:{A:'Térdet hajlítsd, labda fel', rest:'Nyújtsd, labda le'},
+  vb:'-150 -152 300 160', props:[{t:'wall', x:24.5, h:150},{t:'ball'}],
+  P:{rest:STAND({}), A:STAND({hip:[0,57], hi:['t'], arrows:[{at:'sho', dir:-90, len:9}]})}},
+
+ /* ---- Derék: kímélő program akut derékfájásra (általános javaslat, nem a gyógytornász lapjáról) ---- */
+ {id:101, prog:'derek', pos:'Háton, lábak felrakva', name:'Pihenő helyzet, hasi légzés', bed:true,
+  how:'Hanyatt, a lábszárak egy széken vagy párnakupacon, csípő és térd kb. 90°-ban. Ez a helyzet a legtöbb derékfájásnál tehermentesít. Lassan lélegezz a hasadba: belégzésnél emelkedik, kilégzésnél süllyed.',
+  kind:'hold', d:{n:1,s:90}, props:[{t:'box', x:4, w:40, h:36}],
+  P:{rest:SUP({lN:[90,0], lF:[90,0], fN:85}),
+     A:SUP({lN:[90,0], lF:[90,0], fN:85, curve:1.5, hi:['t'], arrows:[{at:'mid', dir:90, len:8}]})}},
+ {id:102, prog:'derek', pos:'Háton', name:'Medencebillentés', bed:true,
+  how:'Hanyatt, térdek felhúzva. Kilégzéssel finoman nyomd a derekad a talajhoz (a medence alja kicsit felfelé billen), pár mp tartás, majd engedd el. Kis, fájdalommentes mozdulat.',
+  kind:'reps', d:{n:2,r:10}, seq:[['T',1.5,1.5],['rest',1.5,.8]], cue:{up:'Derekad a talajhoz', hold:'Tartsd, lélegezz', down:'Engedd el'},
+  P:{rest:SUP({lN:HOOK, lF:HOOKF, fN:0}),
+     A:SUP({hip:[0,7.5], lN:HOOK, lF:HOOKF, fN:0, curve:-2, hi:['t'], arrows:[{at:'hip', dir:-90, len:8}]})}},
+ {id:103, prog:'derek', pos:'Háton', name:'Térddöntögetés', bed:true,
+  how:'Hanyatt, térdek felhúzva, összezárva. Lassan döntsd a térdeidet az egyik oldalra, csak amíg kellemes, vissza középre, majd a másik oldalra. A vállak a talajon maradnak.',
+  kind:'reps', sides:'alt', d:{n:2,r:10}, seq:[['T',2,.5],['rest',2,.5]], sideLbl:{A:'jobbra', B:'balra'}, cue:{up:'Döntsd', hold:'Kicsit tartsd', down:'Középre'},
+  P:{rest:SUP({lN:HOOK, lF:HOOKF, fN:0}),
+     A:SUP({lN:HOOK, lF:HOOKF, ext:{lN:.86, lF:.88}, fN:0, hi:['lN','lF'], arrows:[{rot:1, at:'kneeN'}]}),
+     B:SUP({lN:HOOK, lF:HOOKF, ext:{lN:.88, lF:.86}, fN:0, hi:['lN','lF'], arrows:[{rot:-1, at:'kneeN'}]})}},
+ {id:104, prog:'derek', pos:'Háton', name:'Térd a mellkashoz', bed:true,
+  how:'Hanyatt, térdek felhúzva. Két kézzel fogd át az egyik térded, és húzd finoman a mellkasod felé, tartsd, majd vissza. Felváltva. Ha jólesik, később mindkét térd együtt.',
+  kind:'reps', sides:'alt', d:{n:1,r:10,h:5}, seq:[['T',2,'H'],['rest',2,.8]], sideLbl:{A:'bal térd', B:'jobb térd'}, cue:{up:'Húzd a térded', hold:'Tartsd', down:'Vissza'},
+  P:{rest:SUP({lN:HOOK, lF:HOOKF, fN:0}),
+     A:SUP({lN:[118,-25], lF:HOOKF, fN:10, fF:0, aN:{ik:[-17,35], bend:-1}, aF:{ik:[-16,34], bend:-1}, hi:['lN'], arrows:[{at:'kneeN', dir:160, len:9}]}),
+     B:SUP({lN:HOOK, lF:[118,-25], fN:0, fF:10, aN:{ik:[-17,35], bend:-1}, aF:{ik:[-16,34], bend:-1}, hi:['lF'], arrows:[{at:'kneeF', dir:160, len:9}]})}},
+ {id:105, prog:'derek', pos:'Hason', name:'Hason fekvés',
+  how:'Feküdj hasra, karok a test mellett, fej oldalra fordítva. Ha így fáj, tegyél egy párnát a hasad alá. Lazíts el teljesen. Ha hason fekve erősödik a fájdalom, hagyd ki ezt és a következőt.',
+  kind:'hold', d:{n:1,s:60},
+  P:{rest:PRO({}), A:PRO({curve:-1, hi:['t']})}},
+ {id:106, prog:'derek', pos:'Hason', name:'Könyöktámasz (szfinx)',
+  how:'Hasonfekvésből támaszkodj fel az alkarodra, a medence a talajon marad, a has és a derék ellazul. Csak akkor csináld, ha a fájdalom enyhül, vagy a lábból a derék felé húzódik vissza. Ha a lábba sugárzik tovább, azonnal hagyd abba.',
+  kind:'hold', d:{n:3,s:30},
+  P:{rest:PRO({}),
+     A:PRO({sh:[-44,27], head:165, face:195, aN:[-90,180], aF:[-91,181], hi:['t'], arrows:[{at:'mid', dir:-90, len:8}]})}},
+ {id:107, prog:'derek', pos:'Négykézláb', name:'Cicahát kis ívben',
+  how:'Négykézláb. Nagyon kis ívben domboríts és homoríts, csak a fájdalommentes tartományban. A cél a mozgatás, nem a nyújtás.',
+  kind:'reps', cycle:true, d:{n:1,r:8}, seq:[['A',2.4,.4],['B',2.8,.4],['rest',1.6,.2]], cue:{A:'Domboríts', B:'Homoríts', rest:'Középre'},
+  P:{rest:QUAD({}),
+     A:QUAD({curve:6, head:215, face:-50, hi:['t'], arrows:[{at:'mid', dir:90, len:9}]}),
+     B:QUAD({curve:-4, head:175, face:150, hi:['t'], arrows:[{at:'mid', dir:-90, len:8}]})}},
+ {id:108, prog:'derek', pos:'Sarokülés', name:'Gyermekpóz',
+  how:'Sarokülésből hajolj előre, a karok előre nyújtva, homlok a talaj felé. Ha a has nem fér, nyisd szét a térdeidet. Lélegezz a derekad felé.',
+  kind:'hold', d:{n:2,s:30},
+  P:{rest:KNEEL_REST, A:KNEEL_FOLD}},
 ];
+const PROGS = [
+  {id:'hat', jump:'Hát, lapocka, nyak', title:'Hát, lapocka, nyak', sub:'A gyógytornász lapja (háti becsípődés után), kiegészítve a falnál labdás hengerezéssel.'},
+  {id:'derek', jump:'Derék – most fáj', title:'Derék – akut becsípődés', sub:'Kímélő mozgás az első napokra. Általános javaslat, nem a gyógytornászod lapjáról: mutasd meg neki, és ha mást mond, az a mérvadó.'}
+];
+EX.forEach(ex => { ex.prog = ex.prog || 'hat'; });
+PROGS.forEach(pg => EX.filter(ex => ex.prog === pg.id).forEach((ex, i) => ex.no = i + 1));
 for (const ex of EX){ for (const k in ex.P) ex.P[k] = resolve(ex.P[k]); ex.sides = ex.sides || 'none'; }
 
 /* ================= storage ================= */
@@ -615,33 +701,69 @@ function streak(){
   while (s.has(todayKey(d))){ n++; d.setDate(d.getDate()-1); }
   return n;
 }
+const DEREK_INFO = `
+  <div class="info alert"><h4>Azonnal orvoshoz (ügyelet, 112), ha</h4><ul>
+    <li>zsibbad vagy érzéketlen a gát, a fenék vagy a comb belső oldala,</li>
+    <li>nem tudsz rendesen vizelni, vagy nem tudod tartani a vizeletet vagy a székletet,</li>
+    <li>gyengül a lábad (leesik a lábfej, nem tudsz sarkon vagy lábujjhegyen állni),</li>
+    <li>láz, esés vagy baleset után kezdődött, vagy éjjel, nyugalomban is egyre erősebb.</li></ul></div>
+  <div class="info"><h4>Ha a fájdalom a lábba sugárzik</h4><ul>
+    <li>Térd alá, lábszárba, lábfejbe sugárzó fájdalom vagy zsibbadás esetén pár napon belül menj orvoshoz vagy gyógytornászhoz.</li>
+    <li>Ha egy gyakorlattól a fájdalom lejjebb húzódik a lábban, azt hagyd ki. Ha a derék felé húzódik vissza, az jó jel.</li></ul></div>
+  <div class="info"><h4>Felkelés az ágyból (rönkfordulás)</h4><ol>
+    <li>Hanyatt fekve húzd fel a térdeidet.</li>
+    <li>Fordulj az oldaladra egyben, mint egy rönk: váll és medence együtt, a derekad ne csavarodjon.</li>
+    <li>Lógasd le a lábaidat az ágy szélén, és ezzel egy időben az alsó könyököddel és a felső kezeddel told fel magad oldalt ülésbe.</li>
+    <li>Ülj pár lélegzetnyit, aztán a combodra támaszkodva állj fel. Lefekvés ugyanígy, fordított sorrendben.</li></ol></div>
+  <div class="info"><h4>Ami az első napokban segít</h4><ul>
+    <li>Mozogj, amennyit a fájdalom enged. A napokig fekvés lassítja a gyógyulást; óránként pár perc nyugodt séta sokat számít.</li>
+    <li>Az 1–4. gyakorlat az ágyban is mehet, reggel felkelés előtt, akár napi 2–3 alkalommal.</li>
+    <li>Meleg (melegítőpárna 15–20 percig) sokaknak oldja a görcsöt.</li>
+    <li>Alvás oldalt párnával a térdek között, vagy hanyatt párnával a térd alatt.</li>
+    <li>Pár napig kerüld az emelést, és az előrehajlást csavarással; a hosszú ülést szakítsd meg felállással.</li>
+    <li>Fájdalomcsillapítót orvossal vagy gyógyszerésszel egyeztetve szedj.</li>
+    <li>Fájdalom-szabály: enyhe, ismerős húzódás rendben van. Ha éles, erősödik vagy a lábba sugárzik, állj le.</li>
+    <li>Ha 1–2 hét alatt nem javul, vagy romlik, menj orvoshoz vagy gyógytornászhoz.</li></ul></div>`;
 function renderTorna(){
-  const on = EX.filter(isOn), est = buildSteps(on).reduce((a, s) => a + s.dur, 0);
-  const doneToday = LOG.some(l => l.day === todayKey() && l.full);
-  let groups = [], cur = null;
-  EX.forEach(ex => { if (!cur || cur.pos !== ex.pos){ cur = {pos:ex.pos, items:[]}; groups.push(cur); } cur.items.push(ex); });
-  $('#view').innerHTML = `
-    <section class="today" aria-label="Mai torna">
+  const doneToday = pid => LOG.some(l => l.day === todayKey() && l.full && (l.prog || 'hat') === pid);
+  const progHTML = pg => {
+    const all = EX.filter(ex => ex.prog === pg.id), on = all.filter(isOn);
+    const est = buildSteps(on).reduce((a, s) => a + s.dur, 0);
+    let groups = [], cur = null;
+    all.forEach(ex => { if (!cur || cur.pos !== ex.pos){ cur = {pos:ex.pos, items:[]}; groups.push(cur); } cur.items.push(ex); });
+    return `
+    <section class="prog-h" id="${pg.id}" aria-labelledby="h-${pg.id}"><h2 id="h-${pg.id}">${esc(pg.title)}</h2><p>${esc(pg.sub)}</p></section>
+    <section class="today" aria-label="${esc(pg.title)} indítása">
       <div class="stats">
         <div><b>${on.length}</b><span>gyakorlat</span></div>
         <div><b>${fmtMin(est).replace(' perc','')}</b><span>perc kb.</span></div>
         <div><b>${streak()}</b><span>nap egymás után</span></div>
       </div>
-      <button class="go" id="go" ${on.length ? '' : 'disabled'}>${IC.play}<span>${doneToday ? 'Újra indítom' : 'Indítás'}</span></button>
-      ${doneToday ? '<div class="done-today"><i></i>A mai torna megvan.</div>' : ''}
+      <button class="go" data-go="${pg.id}" ${on.length ? '' : 'disabled'}>${IC.play}<span>${doneToday(pg.id) ? 'Újra indítom' : 'Indítás'}</span></button>
+      ${doneToday(pg.id) ? '<div class="done-today"><i></i>Ma már megvolt.</div>' : ''}
     </section>
-    ${groups.map(g => `<section class="group"><h3>${g.pos}</h3><ul class="list">${g.items.map(ex => `
+    ${pg.id === 'derek' ? DEREK_INFO : ''}
+    ${groups.map(g => `<section class="group"><h3>${esc(g.pos)}</h3><ul class="list">${g.items.map(ex => `
       <li class="ex${isOn(ex) ? '' : ' off'}" data-id="${ex.id}" tabindex="0" aria-label="${esc(ex.name)} részletei">
-        <span class="no">${ex.id}</span>
-        <span class="th">${thumbSVG(ex.P.A)}</span>
-        <div style="min-width:0"><div class="nm">${esc(ex.name)}</div><div class="ds">${esc(doseText(ex))}</div></div>
-        <label class="sw" title="Benne van a mai tornában"><input type="checkbox" id="on-${ex.id}" data-on="${ex.id}" ${isOn(ex) ? 'checked' : ''} aria-label="${esc(ex.name)} bekapcsolva"><span></span></label>
+        <span class="no">${ex.no}</span>
+        <span class="th">${thumbSVG(ex, ex.P.A)}</span>
+        <div style="min-width:0"><div class="nm">${esc(ex.name)}${ex.extra ? `<span class="badge">${esc(ex.extra)}</span>` : ''}${ex.bed ? '<span class="badge" style="color:var(--rest)">ágyban is</span>' : ''}</div><div class="ds">${esc(doseText(ex))}</div></div>
+        <label class="sw" title="Benne van a tornában"><input type="checkbox" id="on-${ex.id}" data-on="${ex.id}" ${isOn(ex) ? 'checked' : ''} aria-label="${esc(ex.name)} bekapcsolva"><span></span></label>
       </li>`).join('')}</ul></section>`).join('')}
+    <div class="sec-end"></div>`;
+  };
+  $('#view').innerHTML = `
+    <nav class="jump" aria-label="Ugrás a szekcióhoz">${PROGS.map(pg => `<a href="#${pg.id}" data-jump="${pg.id}">${esc(pg.jump)}</a>`).join('')}</nav>
+    ${PROGS.map(progHTML).join('')}
     <p class="warn">Fájdalmat okozó mozdulatnál állj le, és kérdezd meg a gyógytornászt. A sorozatok és ismétlések minden gyakorlatnál átírhatók, ha a gyógytornász mást mond.</p>`;
-  $('#go').onclick = () => startSession(EX.filter(isOn));
+  document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => startSession(EX.filter(ex => ex.prog === b.dataset.go && isOn(ex)), b.dataset.go));
+  document.querySelectorAll('[data-jump]').forEach(a => a.onclick = e => {
+    e.preventDefault(); const t = document.getElementById(a.dataset.jump);
+    if (t) t.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start'});
+  });
   document.querySelectorAll('[data-on]').forEach(cb => {
     cb.onclick = e => e.stopPropagation();
-    cb.onchange = () => { const id = +cb.dataset.on; C[id] = Object.assign({}, C[id], {off: !cb.checked}); saveC(); renderTorna(); };
+    cb.onchange = () => { const id = +cb.dataset.on; C[id] = Object.assign({}, C[id], {off: !cb.checked}); saveC(); const y = scrollY; renderTorna(); scrollTo(0, y); };
   });
   document.querySelectorAll('.ex').forEach(li => {
     const open = () => openDetail(EX.find(x => x.id === +li.dataset.id));
@@ -665,7 +787,7 @@ function renderNaplo(){
   const avgPain = pains.length ? (pains.reduce((a, l) => a + l.pain, 0)/pains.length).toFixed(1).replace('.', ',') : '–';
   const rows = LOG.slice().reverse().slice(0, 30).map(l => {
     const d = new Date(l.ts);
-    return `<tr><td>${d.toLocaleDateString('hu-HU', {month:'short', day:'numeric', weekday:'short'})}</td><td>${d.toLocaleTimeString('hu-HU', {hour:'2-digit', minute:'2-digit'})}</td>
+    return `<tr><td>${d.toLocaleDateString('hu-HU', {month:'short', day:'numeric', weekday:'short'})}</td><td>${(l.prog || 'hat') === 'derek' ? 'Derék' : 'Hát'}</td><td>${d.toLocaleTimeString('hu-HU', {hour:'2-digit', minute:'2-digit'})}</td>
       <td>${fmtClock(l.secs)}</td><td>${l.done}/${l.total}</td><td>${l.pain != null ? `<span class="pain" style="${painColor(l.pain)}">${l.pain}</span>` : '–'}</td>
       <td style="white-space:normal;min-width:160px;color:var(--muted)">${esc(l.note || '')}</td></tr>`;
   }).join('');
@@ -677,7 +799,7 @@ function renderNaplo(){
     </div>
     <div class="heat-wrap"><div class="heat" role="img" aria-label="Az elmúlt ${weeks} hét tornái">${cells}</div>
       <div class="legend"><span><i style="background:var(--rest)"></i>teljes torna</span><span><i style="background:var(--accent)"></i>részleges</span><span><i style="background:var(--sunk)"></i>kimaradt</span></div></div>
-    <div class="log-wrap">${LOG.length ? `<table class="log"><thead><tr><th>Nap</th><th>Idő</th><th>Hossz</th><th>Gyak.</th><th>Fájd.</th><th>Megjegyzés</th></tr></thead><tbody>${rows}</tbody></table>`
+    <div class="log-wrap">${LOG.length ? `<table class="log"><thead><tr><th>Nap</th><th>Program</th><th>Idő</th><th>Hossz</th><th>Gyak.</th><th>Fájd.</th><th>Megjegyzés</th></tr></thead><tbody>${rows}</tbody></table>`
       : '<div class="empty">Még nincs bejegyzés. Egy torna végén ide kerül a dátum, a hossz és a fájdalom-értékelés.</div>'}</div>
     <p class="warn">A napló ebben a böngészőben tárolódik ezen az eszközön.</p>`;
 }
@@ -739,8 +861,8 @@ function openDetail(ex){
     : [['n','Sorozat',1,10,1,''],['r', ex.sides === 'alt' ? 'Ismétlés (két oldal együtt)' : 'Ismétlés', ex.sides === 'alt' ? 2 : 1, 40, ex.sides === 'alt' ? 2 : 1,'db']]
         .concat(ex.seq.some(s => s[2] === 'H') ? [['h','Tartás',1,15,1,'mp']] : []);
   $('#overlay').innerHTML = `<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="dt-name">
-    <div class="sheet-h"><span class="tag">${ex.id}. gyakorlat · ${ex.pos}</span><button class="x" id="dt-x" aria-label="Bezárás">${IC.x}</button></div>
-    <div class="stage"><svg viewBox="${VB}" class="fg" aria-hidden="true"><rect class="mat" x="-126" y="0.5" width="240" height="6" rx="3"/><g id="dt-fig"></g></svg></div>
+    <div class="sheet-h"><span class="tag">${ex.no}. gyakorlat · ${esc(ex.pos)}</span><button class="x" id="dt-x" aria-label="Bezárás">${IC.x}</button></div>
+    <div class="stage"><svg viewBox="${vbOf(ex)}" class="fg" aria-hidden="true"><g id="dt-fig"></g></svg></div>
     <h2 id="dt-name">${esc(ex.name)}</h2>
     <div class="dose" id="dt-dose">${esc(doseText(ex))}</div>
     <p>${esc(ex.how)}</p>
@@ -752,7 +874,7 @@ function openDetail(ex){
   bindSteppers($('.sheet'), k => cfg(ex)[k], (k, v) => { C[ex.id] = Object.assign({}, C[ex.id], {[k]: v}); saveC(); $('#dt-dose').textContent = doseText(ex); }, k => unit[k]);
   $('#dt-x').onclick = closeOverlay;
   $('#scrim').onclick = e => { if (e.target.id === 'scrim') closeOverlay(); };
-  $('#dt-go').onclick = () => { closeOverlay(); startSession([ex]); };
+  $('#dt-go').onclick = () => { closeOverlay(); startSession([ex], ex.prog); };
   $('#dt-def').onclick = () => { const off = C[ex.id] && C[ex.id].off; C[ex.id] = off ? {off:true} : {}; saveC(); openDetail(ex); };
   document.addEventListener('keydown', escClose);
   sheetDemo = {ex, t0: performance.now()/1000, el: $('#dt-fig')};
@@ -763,11 +885,11 @@ function openDetail(ex){
 const R = {on:false, steps:[], i:0, t0:0, paused:false, pT:0, list:[], start:0, last:{}, pausedSecs:0};
 const now = () => performance.now()/1000;
 const el = () => R.paused ? R.pT - R.t0 : now() - R.t0;
-function startSession(list){
+function startSession(list, prog){
   if (!list.length) return;
   ac(); keepAwake();
   closeOverlay();
-  Object.assign(R, {on:true, list, steps: buildSteps(list), i:0, paused:false, start: Date.now(), pausedSecs:0, maxXi:-1});
+  Object.assign(R, {on:true, list, prog: prog || list[0].prog, steps: buildSteps(list), i:0, paused:false, start: Date.now(), pausedSecs:0, maxXi:-1});
   $('#player').hidden = false; $('#app').setAttribute('aria-hidden', 'true');
   $('#pl-prog').innerHTML = list.map(() => '<i><b></b></i>').join('');
   enter(0);
@@ -777,6 +899,7 @@ function enter(i){
   R.last = {sec:null, rep:-1, seg:-1};
   const st = R.steps[i], ex = st.ex, c = cfg(ex);
   if (st.t === 'work') R.maxXi = Math.max(R.maxXi, st.xi);
+  $('#pl-svg').setAttribute('viewBox', vbOf(ex));
   $('#pl-name').textContent = ex.name;
   $('#pl-pos').textContent = ex.pos;
   $('#pl-how').textContent = ex.how;
@@ -832,14 +955,14 @@ function exitPlayer(force){
   $('#player').hidden = true; $('#app').removeAttribute('aria-hidden');
   $('#pl-exit').classList.remove('sure'); $('#pl-exit span').textContent = 'Kilépés';
   if (!force && done >= 2){
-    LOG.push({ts: Date.now(), day: todayKey(), secs: Math.round((Date.now() - R.start)/1000 - R.pausedSecs), done: done, total: R.list.length, full:false, pain:null});
+    LOG.push({ts: Date.now(), day: todayKey(), secs: Math.round((Date.now() - R.start)/1000 - R.pausedSecs), done: done, total: R.list.length, full:false, pain:null, prog:R.prog});
     saveL();
   }
   render();
 }
 function finish(){
   const entry = {ts: Date.now(), day: todayKey(), secs: Math.round((Date.now() - R.start)/1000 - R.pausedSecs), done: R.list.length, total: R.list.length,
-    full: R.list.length >= Math.min(10, EX.filter(isOn).length), pain:null, note:''};
+    full: R.list.length >= Math.min(R.prog === 'derek' ? 5 : 10, EX.filter(x => isOn(x) && x.prog === R.prog).length), pain:null, note:'', prog:R.prog};
   LOG.push(entry); saveL();
   exitPlayer(true);
   beep(660, .15, .2); beep(880, .15, .2, .16); beep(1180, .4, .2, .32); buzz([80, 60, 160]);
@@ -913,7 +1036,7 @@ function tickPlayer(){
     if (R.last.sec !== null && sec <= 3 && sec >= 1 && (st.t !== 'work' || st.set.secs)) beep(st.t === 'work' ? 740 : 620, .1, .16);
     R.last.sec = sec;
   }
-  $('#pl-fig').innerHTML = figSVG(pose, now());
+  $('#pl-fig').innerHTML = stageSVG(ex, pose, now());
   const bigEl = $('#pl-big'); if (bigEl.textContent !== String(big)) bigEl.textContent = big;
   $('#pl-arc').setAttribute('stroke-dashoffset', (276.46 * Math.min(1, ringK)).toFixed(1));
   const cueEl = $('#pl-cue'); if (cueEl.textContent !== cue) cueEl.textContent = cue;
@@ -931,11 +1054,13 @@ function tickPlayer(){
 function frame(){
   try {
     if (R.on) tickPlayer();
-    if (sheetDemo && sheetDemo.el.isConnected) sheetDemo.el.innerHTML = figSVG(demoAt(sheetDemo.ex, now() - sheetDemo.t0), now());
+    if (sheetDemo && sheetDemo.el.isConnected) sheetDemo.el.innerHTML = stageSVG(sheetDemo.ex, demoAt(sheetDemo.ex, now() - sheetDemo.t0), now());
   } catch(err){ console.error(err); }
   requestAnimationFrame(frame);
 }
+if (/^#(derek|hat)$/.test(location.hash)) view = 'torna';
 render();
+if (/^#(derek|hat)$/.test(location.hash)){ const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
 requestAnimationFrame(frame);
 </script>
 <!--wrap-->
