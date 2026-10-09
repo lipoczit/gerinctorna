@@ -1,0 +1,943 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--/wrap-->
+<title>Gerinctorna</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: one calm column at home; the player is a full-screen stage + scoreboard, two columns when wide.
+   Colors borrow from kinesio tape: pink = work, cyan = rest, amber = get ready. */
+:root{
+  --bg:#EDF1EE; --surface:#FFFFFF; --sunk:#E3E9E5; --ink:#17201D; --muted:#5A6863; --line:#D3DCD7;
+  --mat:#D4DFD9; --fig:#22302B; --fig-far:#A3B3AD;
+  --accent:#C92C66; --accent-far:#E9A3BC; --accent-ink:#FFFFFF;
+  --rest:#0C849C; --prep:#A86B12;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1312; --surface:#171F1D; --sunk:#111816; --ink:#E4ECE9; --muted:#93A39E; --line:#28332F;
+  --mat:#222E2A; --fig:#DCE6E2; --fig-far:#5A6C66;
+  --accent:#FF5A92; --accent-far:#8A3653; --accent-ink:#1A0610;
+  --rest:#3FC2D9; --prep:#E9AC45; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0E1312; --surface:#171F1D; --sunk:#111816; --ink:#E4ECE9; --muted:#93A39E; --line:#28332F;
+  --mat:#222E2A; --fig:#DCE6E2; --fig-far:#5A6C66;
+  --accent:#FF5A92; --accent-far:#8A3653; --accent-ink:#1A0610;
+  --rest:#3FC2D9; --prep:#E9AC45; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;font:16px/1.5 var(--body);-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+h1,h2,h3{text-wrap:balance;margin:0}
+.num{font-family:var(--display);font-variant-numeric:tabular-nums}
+
+/* ---------- home ---------- */
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:20px 64px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:700;font-size:30px;letter-spacing:.01em;text-transform:uppercase;line-height:1}
+.brand small{display:block;font:400 13px/1.3 var(--body);letter-spacing:0;text-transform:none;color:var(--muted);margin-top:4px}
+.tabs{display:flex;background:var(--sunk);border-radius:999px;padding:4px;gap:2px}
+.tabs button{border:0;background:none;padding:7px 14px;border-radius:999px;font-size:14px;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+
+.today{margin-top:22px;display:grid;grid-template-columns:1fr auto;gap:16px 20px;align-items:end;
+  background:var(--surface);border-radius:var(--r);padding:20px;border:1px solid var(--line)}
+.today .k{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.stats{display:flex;gap:28px;flex-wrap:wrap}
+.stats b{display:block;font:600 34px/1 var(--display);font-variant-numeric:tabular-nums}
+.stats span{font-size:13px;color:var(--muted)}
+.go{border:0;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:14px 26px;font-weight:700;font-size:17px;display:inline-flex;gap:10px;align-items:center;white-space:nowrap}
+.go svg{width:18px;height:18px}
+.done-today{grid-column:1/-1;font-size:14px;color:var(--muted);display:flex;gap:8px;align-items:center}
+.done-today i{width:8px;height:8px;border-radius:50%;background:var(--rest);display:inline-block}
+
+.group{margin-top:28px}
+.group h3{font:600 14px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 10px 4px}
+.list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.ex{display:grid;grid-template-columns:34px 112px minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--r);padding:8px 12px 8px 10px;cursor:pointer}
+.ex:hover{border-color:var(--muted)}
+.ex.off{opacity:.5}
+.ex .no{font:700 24px/1 var(--display);color:var(--muted);text-align:center}
+.ex .th{background:var(--sunk);border-radius:10px;aspect-ratio:2/1;overflow:hidden;max-width:100%}
+.ex .th svg{display:block;width:100%;height:100%}
+.ex .nm{font-weight:700;line-height:1.25}
+.ex .ds{font-size:14px;color:var(--muted);margin-top:2px}
+.sw{position:relative;width:44px;height:26px;flex:none}
+.sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.sw span{position:absolute;inset:0;border-radius:999px;background:var(--line);transition:background .2s}
+.sw span::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--surface);transition:transform .2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw input:checked+span{background:var(--rest)}
+.sw input:checked+span::after{transform:translateX(18px)}
+.sw input:focus-visible+span{outline:3px solid var(--accent);outline-offset:2px}
+.warn{margin-top:28px;font-size:14px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+
+/* figure */
+.fg path{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.fg .n{stroke:var(--fig)} .fg .f{stroke:var(--fig-far)}
+.fg .hl{stroke:var(--accent)} .fg .hlf{stroke:var(--accent-far)}
+.fg .hd{fill:var(--fig)} .fg .hdh{fill:var(--accent)}
+.fg .ar{stroke:var(--accent);stroke-width:2.6}
+.mat{fill:var(--mat)}
+
+/* log */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:22px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.card b{display:block;font:600 34px/1.05 var(--display);font-variant-numeric:tabular-nums}
+.card span{font-size:13px;color:var(--muted)}
+.heat-wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-top:10px;overflow-x:auto}
+.heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,16px);gap:4px;width:max-content}
+.heat i{width:16px;height:16px;border-radius:4px;background:var(--sunk);display:block}
+.heat i.y{background:var(--rest)} .heat i.p{background:var(--accent)} .heat i.t{outline:2px solid var(--ink);outline-offset:-2px}
+.legend{display:flex;gap:14px;font-size:13px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+table.log{width:100%;border-collapse:collapse;font-size:15px}
+.log-wrap{margin-top:10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow-x:auto}
+table.log th{font-weight:400;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 14px;border-bottom:1px solid var(--line)}
+table.log td{padding:10px 14px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
+table.log tr:last-child td{border-bottom:0}
+.pain{display:inline-block;min-width:28px;text-align:center;border-radius:6px;padding:1px 6px;font-weight:700}
+.empty{color:var(--muted);padding:18px}
+
+/* settings */
+.set{margin-top:22px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row .l{min-width:0}
+.row .l small{display:block;color:var(--muted);font-size:13px}
+.step{display:flex;align-items:center;background:var(--sunk);border-radius:999px;flex:none}
+.step button{border:0;background:none;width:38px;height:38px;border-radius:50%;font-size:20px;line-height:1}
+.step output{min-width:58px;text-align:center;font:600 20px/1 var(--display);font-variant-numeric:tabular-nums}
+.seg{display:flex;background:var(--sunk);border-radius:999px;padding:3px;flex:none}
+.seg button{border:0;background:none;padding:6px 12px;border-radius:999px;font-size:14px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:700}
+.ghost{border:1px solid var(--line);background:none;border-radius:999px;padding:9px 16px;font-size:14px}
+.ghost.danger{color:var(--accent);border-color:var(--accent)}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(10,16,14,.5);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet{background:var(--bg);width:100%;max-width:720px;max-height:92%;overflow:auto;border-radius:20px 20px 0 0;
+  padding:12px 16px calc(24px + env(safe-area-inset-bottom,0px))}
+@media (min-width:760px){.scrim{align-items:center}.sheet{border-radius:20px;max-height:88%}}
+.sheet-h{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
+.sheet-h .tag{font:600 14px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.x{border:0;background:var(--sunk);width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex:none}
+.x svg{width:16px;height:16px}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);aspect-ratio:2/1;max-width:100%;overflow:hidden}
+.stage svg{display:block;width:100%;height:100%}
+.sheet h2{font:700 30px/1.05 var(--display);margin-top:16px;text-transform:uppercase;letter-spacing:.01em}
+.sheet .dose{font-weight:700;margin-top:6px}
+.sheet p{margin:10px 0 0;max-width:62ch}
+.sheet .edit{margin-top:16px}
+.sheet .acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;align-items:center}
+
+/* ---------- player ---------- */
+#player{position:fixed;inset:0;background:var(--bg);z-index:30;display:flex;flex-direction:column;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.pl-top{display:flex;align-items:center;gap:12px;padding:10px 16px}
+.pl-exit{border:0;background:var(--sunk);border-radius:999px;padding:8px 14px;font-size:14px;display:flex;gap:6px;align-items:center;white-space:nowrap}
+.pl-exit svg{width:13px;height:13px}
+.pl-exit.sure{background:var(--accent);color:var(--accent-ink)}
+.prog{flex:1;display:flex;gap:3px;min-width:0}
+.prog i{flex:1;height:6px;border-radius:3px;background:var(--line);overflow:hidden;position:relative}
+.prog i b{position:absolute;inset:0;background:var(--ink);transform-origin:left;transform:scaleX(0)}
+.pl-count{font:600 18px/1 var(--display);font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+.pl-body{flex:1;min-height:0;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:4px;padding:0 16px}
+.pl-stage{position:relative;min-height:0;display:flex;align-items:center;justify-content:center}
+.pl-stage svg{width:100%;height:100%;max-height:100%}
+.pl-pos{position:absolute;top:4px;left:0;font:600 14px/1 var(--display);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.pl-info{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 18px;align-items:center;padding-bottom:6px}
+.pl-phase{font:700 15px/1 var(--display);letter-spacing:.16em;text-transform:uppercase;color:var(--ph,var(--prep))}
+.pl-name{font:700 clamp(26px,6vw,40px)/1 var(--display);text-transform:uppercase;letter-spacing:.005em;margin-top:6px}
+.pl-side{display:inline-block;margin-top:8px;background:var(--ph,var(--prep));color:var(--bg);font-weight:700;font-size:14px;border-radius:999px;padding:3px 12px}
+.pl-cue{margin-top:8px;font-size:18px;font-weight:700;color:var(--ph,var(--prep));min-height:1.5em}
+.pl-how{grid-column:1/-1;margin:4px 0 0;color:var(--muted);font-size:15px;max-width:62ch}
+.pl-next{grid-column:1/-1;font-size:14px;color:var(--muted);min-height:1.4em}
+.ring{position:relative;width:clamp(120px,32vw,176px);aspect-ratio:1;grid-column:2;grid-row:1}
+.pl-info>div:first-child{grid-column:1;grid-row:1;min-width:0}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:9}
+.ring .bgc{stroke:var(--line)} .ring .fgc{stroke:var(--ph,var(--prep));stroke-linecap:round}
+.ring .c{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.ring .big{font:700 clamp(46px,13vw,68px)/.9 var(--display);font-variant-numeric:tabular-nums}
+.ring .unit{font-size:13px;color:var(--muted);margin-top:4px}
+.dots{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.dots i{width:22px;height:6px;border-radius:3px;background:var(--line)}
+.dots i.d{background:var(--ink)} .dots i.c{background:var(--ph,var(--prep))}
+.pl-ctrl{display:flex;align-items:center;justify-content:center;gap:22px;padding:10px 16px 16px}
+.cbtn{border:0;background:var(--sunk);width:56px;height:56px;border-radius:50%;display:grid;place-items:center}
+.cbtn svg{width:22px;height:22px}
+.cbtn.main{width:76px;height:76px;background:var(--ink);color:var(--bg)}
+.cbtn.main svg{width:30px;height:30px}
+.cbtn small{display:none}
+#player.paused .pl-phase::after{content:" · szünet";color:var(--muted)}
+@media (min-width:900px) and (min-aspect-ratio:4/3){
+  .pl-body{grid-template-rows:1fr;grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);gap:32px;align-items:center;padding:0 32px}
+  .pl-stage{height:100%}
+  .pl-info{grid-template-columns:1fr;align-content:center}
+  .ring{width:200px;grid-column:1;grid-row:2}
+  .pl-info>div:first-child{grid-row:1}
+}
+@media (max-height:560px){.pl-how{display:none}}
+
+/* finish */
+.fin{text-align:left}
+.fin h2{font:700 40px/1 var(--display);text-transform:uppercase;margin-top:6px}
+.painsel{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:4px;margin-top:10px}
+.painsel button{border:1px solid var(--line);background:var(--surface);border-radius:8px;height:42px;font:600 18px/1 var(--display);font-variant-numeric:tabular-nums}
+.painsel button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.painlbl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:4px}
+textarea{width:100%;margin-top:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:10px;font:inherit;min-height:70px;resize:vertical}
+
+@media (max-width:520px){
+  .ex{grid-template-columns:26px 84px minmax(0,1fr) auto;gap:10px;padding:8px 10px 8px 6px}
+  .ex .no{font-size:20px}
+  .today{grid-template-columns:1fr}
+  .go{justify-content:center}
+  .stats{gap:22px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div id="app" class="wrap">
+  <header class="top">
+    <div class="brand">Gerinctorna<small>Napi gyógytorna becsípődés után</small></div>
+    <nav class="tabs" role="tablist" aria-label="Nézetek">
+      <button role="tab" id="tab-torna" aria-selected="true" data-v="torna">Torna</button>
+      <button role="tab" id="tab-naplo" aria-selected="false" data-v="naplo">Napló</button>
+      <button role="tab" id="tab-beall" aria-selected="false" data-v="beall">Beállítás</button>
+    </nav>
+  </header>
+  <main id="view"></main>
+</div>
+
+<section id="player" hidden aria-label="Torna lejátszó">
+  <div class="pl-top">
+    <button class="pl-exit" id="pl-exit"><svg viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span>Kilépés</span></button>
+    <div class="prog" id="pl-prog"></div>
+    <span class="pl-count" id="pl-count"></span>
+  </div>
+  <div class="pl-body">
+    <div class="pl-stage">
+      <span class="pl-pos" id="pl-pos"></span>
+      <svg viewBox="-130 -100 248 112" class="fg" aria-hidden="true"><rect class="mat" x="-126" y="0.5" width="240" height="6" rx="3"/><g id="pl-fig"></g></svg>
+    </div>
+    <div class="pl-info">
+      <div>
+        <div class="pl-phase" id="pl-phase"></div>
+        <h2 class="pl-name" id="pl-name"></h2>
+        <span class="pl-side" id="pl-side" hidden></span>
+        <div class="pl-cue" id="pl-cue"></div>
+        <div class="dots" id="pl-dots"></div>
+      </div>
+      <div class="ring" id="pl-ring">
+        <svg viewBox="0 0 100 100"><circle class="bgc" cx="50" cy="50" r="44"/><circle class="fgc" id="pl-arc" cx="50" cy="50" r="44" stroke-dasharray="276.46" stroke-dashoffset="0"/></svg>
+        <div class="c"><div class="big" id="pl-big">0</div><div class="unit" id="pl-unit"></div></div>
+      </div>
+      <p class="pl-how" id="pl-how"></p>
+      <div class="pl-next" id="pl-next"></div>
+    </div>
+  </div>
+  <div class="pl-ctrl">
+    <button class="cbtn" id="pl-prev" aria-label="Előző gyakorlat"><svg viewBox="0 0 24 24"><path d="M6 5v14M19 5l-10 7 10 7z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></button>
+    <button class="cbtn main" id="pl-play" aria-label="Szünet"></button>
+    <button class="cbtn" id="pl-skip" aria-label="Tovább (lépés átugrása)"><svg viewBox="0 0 24 24"><path d="M18 5v14M5 5l10 7-10 7z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></button>
+  </div>
+</section>
+
+<div id="overlay"></div>
+
+<script>
+"use strict";
+/* ================= figure rig ================= */
+const L = {T:48, N:6, R:9.5, UA:24, FA:23, TH:37, SH:35, FT:9};
+const rad = d => d*Math.PI/180, deg = r => r*180/Math.PI;
+const pt = (p,a,l) => [p[0]+l*Math.cos(rad(a)), p[1]+l*Math.sin(rad(a))];
+const ang = (a,b) => deg(Math.atan2(b[1]-a[1], b[0]-a[0]));
+function ik(root, target, l1, l2, bend){
+  let d = Math.hypot(target[0]-root[0], target[1]-root[1]);
+  d = Math.max(Math.abs(l1-l2)+0.01, Math.min(d, l1+l2-0.01));
+  const base = ang(root, target);
+  const c = (l1*l1 + d*d - l2*l2) / (2*l1*d);
+  const a1 = base + bend*deg(Math.acos(Math.max(-1, Math.min(1, c))));
+  return [a1, ang(pt(root, a1, l1), target)];
+}
+const ANG = ['torso','head','face','uaN','faN','uaF','faF','thN','shN','thF','shF','ftN','ftF'];
+
+function resolve(s){
+  const r = {hip:s.hip.slice(), curve:s.curve||0};
+  r.torso = s.sh ? ang(s.hip, s.sh) : s.torso;
+  r.head = s.head ?? r.torso;
+  r.face = s.face;
+  const e = r.e = Object.assign({aN:1,aF:1,lN:1,lF:1,t:1,n:1}, s.ext||{});
+  const sho = pt(r.hip, r.torso, L.T*e.t);
+  const limb = (v, root, l1, l2, x) => Array.isArray(v) ? v.slice() : ik(root, v.ik, l1*x, l2*x, v.bend);
+  const aF = s.aF ?? s.aN, lF = s.lF ?? s.lN;
+  [r.uaN, r.faN] = limb(s.aN, sho, L.UA, L.FA, e.aN);
+  [r.uaF, r.faF] = limb(aF, sho, L.UA, L.FA, e.aF);
+  [r.thN, r.shN] = limb(s.lN, r.hip, L.TH, L.SH, e.lN);
+  [r.thF, r.shF] = limb(lF, r.hip, L.TH, L.SH, e.lF);
+  r.ftN = s.fN; r.ftF = s.fF ?? s.fN;
+  r.hi = s.hi || []; r.arrows = s.arrows || [];
+  r.ha = (r.hi.length || r.arrows.length) ? 1 : 0;
+  return r;
+}
+function lerpPose(a, b, k){
+  const o = {hip:[a.hip[0]+(b.hip[0]-a.hip[0])*k, a.hip[1]+(b.hip[1]-a.hip[1])*k], curve:a.curve+(b.curve-a.curve)*k, e:{}};
+  for (const key of ANG){ const d = (((b[key]-a[key])%360)+540)%360-180; o[key] = a[key]+d*k; }
+  for (const key in a.e) o.e[key] = a.e[key]+(b.e[key]-a.e[key])*k;
+  if (b.ha && a.ha){ o.hi = k<.5 ? a.hi : b.hi; o.arrows = k<.5 ? a.arrows : b.arrows; o.ha = Math.abs(1-2*k); }
+  else if (b.ha){ o.hi = b.hi; o.arrows = b.arrows; o.ha = k; }
+  else { o.hi = a.hi; o.arrows = a.arrows; o.ha = a.ha*(1-k); }
+  return o;
+}
+const ease = k => .5 - .5*Math.cos(Math.PI*Math.min(1, Math.max(0, k)));
+
+function joints(p){
+  const e = p.e, J = {hip:p.hip};
+  J.sho = pt(p.hip, p.torso, L.T*e.t);
+  J.head = pt(J.sho, p.head, L.N*e.n + L.R);
+  J.neck = pt(J.sho, p.head, L.N*e.n + 2);
+  J.elbN = pt(J.sho, p.uaN, L.UA*e.aN); J.handN = pt(J.elbN, p.faN, L.FA*e.aN);
+  J.elbF = pt(J.sho, p.uaF, L.UA*e.aF); J.handF = pt(J.elbF, p.faF, L.FA*e.aF);
+  J.kneeN = pt(p.hip, p.thN, L.TH*e.lN); J.ankN = pt(J.kneeN, p.shN, L.SH*e.lN); J.toeN = pt(J.ankN, p.ftN, L.FT);
+  J.kneeF = pt(p.hip, p.thF, L.TH*e.lF); J.ankF = pt(J.kneeF, p.shF, L.SH*e.lF); J.toeF = pt(J.ankF, p.ftF, L.FT);
+  // spine bend: control point pushed perpendicular to the torso, toward world-up for positive curve
+  const ta = rad(p.torso); let nx = -Math.sin(ta), ny = Math.cos(ta); if (ny < 0 || (ny === 0 && nx > 0)){ nx = -nx; ny = -ny; }
+  J.ctrl = [(J.hip[0]+J.sho[0])/2 + nx*p.curve*2, (J.hip[1]+J.sho[1])/2 + ny*p.curve*2];
+  J.mid = [.25*J.hip[0]+.5*J.ctrl[0]+.25*J.sho[0], .25*J.hip[1]+.5*J.ctrl[1]+.25*J.sho[1]];
+  return J;
+}
+const P = q => q[0].toFixed(1)+' '+(-q[1]).toFixed(1);
+
+function figSVG(p, t){
+  const J = joints(p), hi = new Set(p.hi||[]), ha = +(p.ha||0).toFixed(3);
+  let s = '';
+  const seg = (key, d, w, far) => {
+    s += `<path d="${d}" class="${far?'f':'n'}" stroke-width="${w}"/>`;
+    if (ha > 0.01 && hi.has(key)) s += `<path d="${d}" class="${far?'hlf':'hl'}" stroke-width="${w}" opacity="${ha}"/>`;
+  };
+  const arm = (sfx, far) => seg('a'+sfx, `M${P(J.sho)}L${P(J['elb'+sfx])}L${P(J['hand'+sfx])}`, 7.5, far);
+  const leg = (sfx, far) => {
+    seg('l'+sfx, `M${P(J.hip)}L${P(J['knee'+sfx])}L${P(J['ank'+sfx])}`, 10, far);
+    seg('l'+sfx, `M${P(J['ank'+sfx])}L${P(J['toe'+sfx])}`, 6.5, far);
+  };
+  arm('F', true); leg('F', true);
+  seg('t', `M${P(J.hip)}Q${P(J.ctrl)} ${P(J.sho)}`, 16, false);
+  leg('N', false);
+  s += `<path d="M${P(J.sho)}L${P(J.neck)}" class="n" stroke-width="7"/>`;
+  const nose = pt(J.head, p.face, 8.4);
+  s += `<circle cx="${J.head[0].toFixed(1)}" cy="${(-J.head[1]).toFixed(1)}" r="${L.R}" class="hd"/><circle cx="${nose[0].toFixed(1)}" cy="${(-nose[1]).toFixed(1)}" r="2.6" class="hd"/>`;
+  if (ha > 0.01 && hi.has('h')) s += `<circle cx="${J.head[0].toFixed(1)}" cy="${(-J.head[1]).toFixed(1)}" r="${L.R}" class="hdh" opacity="${ha}"/>`;
+  arm('N', false);
+  if (ha > 0.01) for (const a of (p.arrows||[])) s += arrowSVG(a, J, t, ha);
+  return s;
+}
+function arrowSVG(a, J, t, ha){
+  const pulse = .5 + .5*Math.sin(t*4.2);
+  const op = (ha*(.55 + .45*pulse)).toFixed(2);
+  if (a.rot){
+    const c = J.head, r = 16, a0 = 50, a1 = 130, pts = [];
+    for (let i=0;i<=12;i++) pts.push(pt(c, a0+(a1-a0)*i/12, r));
+    const end = a.rot > 0 ? pts[0] : pts[12], prev = a.rot > 0 ? pts[2] : pts[10];
+    const dir = ang(prev, end), w1 = pt(end, dir+150, 5), w2 = pt(end, dir-150, 5);
+    return `<path class="ar" opacity="${op}" d="M${pts.map(P).join('L')}M${P(w1)}L${P(end)}L${P(w2)}"/>`;
+  }
+  const base = J[a.at], off = 10 + 3*pulse, len = a.len || 13;
+  const p0 = pt(base, a.dir, off), p1 = pt(base, a.dir, off+len);
+  const w1 = pt(p1, a.dir+150, 5), w2 = pt(p1, a.dir-150, 5);
+  return `<path class="ar" opacity="${op}" d="M${P(p0)}L${P(p1)}M${P(w1)}L${P(p1)}L${P(w2)}"/>`;
+}
+const VB = '-130 -100 248 112';
+const thumbSVG = pose => `<svg viewBox="${VB}" class="fg" aria-hidden="true"><rect class="mat" x="-126" y="0.5" width="240" height="6" rx="3"/>${figSVG(pose, 1.2)}</svg>`;
+
+/* ================= poses ================= */
+const HOOK = {ik:[44,5], bend:1}, HOOKF = {ik:[45,5], bend:1};
+const SUP = o => Object.assign({hip:[0,6], torso:180, head:180, face:90, aN:[1,0], aF:[-1,0], lN:[0,0], lF:[0,0], fN:82}, o);
+const PRO = o => Object.assign({hip:[0,6], torso:180, head:180, face:-90, aN:[1,0], aF:[-1,0], lN:[0,0], lF:[0,0], fN:-6}, o);
+const QUAD = o => Object.assign({hip:[0,41], sh:[-46,49], head:186, face:-95,
+  aN:{ik:[-46,1], bend:1}, aF:{ik:[-48,1], bend:1}, lN:{ik:[34,5], bend:-1}, lF:{ik:[33,5], bend:-1}, fN:0}, o);
+const HANDS_HEAD = {ik:[-64,6], bend:-1};
+
+/* ================= exercises (from the physio sheet) ================= */
+const EX = [
+ {id:1, pos:'Háton', name:'Nyújtózás, két kar a fül mellett',
+  how:'Hanyatt fekve, térdek felhúzva. Két kar a fül mellett, teljes testtel nyújtózz a fejed fölé.',
+  kind:'hold', d:{n:3,s:30},
+  P:{rest:SUP({aN:[180,180], aF:[181,181], lN:HOOK, lF:HOOKF, fN:0}),
+     A:SUP({aN:[180,180], aF:[181,181], lN:HOOK, lF:HOOKF, fN:0, ext:{aN:1.07, aF:1.07, t:1.02}, hi:['aN','aF','t'],
+       arrows:[{at:'handN', dir:180}]})}},
+ {id:2, pos:'Háton', name:'Ellentétes kar–láb nyújtózás',
+  how:'Az egyik kar a fül mellett, a másik oldali láb kinyújtva, a másik térd felhúzva. Nyújtózz kézzel és sarokkal ellentétes irányba.',
+  kind:'hold', sides:'split', d:{nA:4,nB:3,s:30}, sideLbl:{A:'bal kar + jobb láb', B:'jobb kar + bal láb'},
+  P:{rest:SUP({aN:[180,180], aF:[181,181], lN:HOOK, lF:HOOKF, fN:0}),
+     A:SUP({aN:[180,180], aF:[181,181], lN:HOOK, lF:[0,0], fN:0, fF:25, ext:{aN:1.07, lF:1.04}, hi:['aN','lF'],
+       arrows:[{at:'handN', dir:180},{at:'toeF', dir:0}]}),
+     B:SUP({aN:[180,180], aF:[181,181], lN:[0,0], lF:HOOKF, fN:25, fF:0, ext:{aF:1.07, lN:1.04}, hi:['aF','lN'],
+       arrows:[{at:'handF', dir:180},{at:'toeN', dir:0}]})}},
+ {id:3, pos:'Háton', name:'Azonos oldali kar–láb nyújtózás',
+  how:'Ugyanazon oldali kar és láb nyújtása, a másik térd felhúzva. Mindkét oldalra.',
+  kind:'hold', sides:'each', d:{n:3,s:30}, sideLbl:{A:'bal oldal', B:'jobb oldal'},
+  P:{rest:SUP({aN:[180,180], aF:[181,181], lN:HOOK, lF:HOOKF, fN:0}),
+     A:SUP({aN:[180,180], aF:[181,181], lN:[0,0], lF:HOOKF, fN:25, fF:0, ext:{aN:1.07, lN:1.04}, hi:['aN','lN'],
+       arrows:[{at:'handN', dir:180},{at:'toeN', dir:0}]}),
+     B:SUP({aN:[180,180], aF:[181,181], lN:HOOK, lF:[0,0], fN:0, fF:25, ext:{aF:1.07, lF:1.04}, hi:['aF','lF'],
+       arrows:[{at:'handF', dir:180},{at:'toeF', dir:0}]})}},
+ {id:4, pos:'Háton', name:'Nyaknyújtás',
+  how:'Mutatóujjak az öreglyukba (a koponya alja), hüvelykujjak az arccsonton, áll enyhén behúzva. Óvatos nyaknyújtás a fejtető irányába.',
+  kind:'hold', d:{n:3,s:30},
+  P:{rest:SUP({aN:{ik:[-70,4], bend:-1}, aF:{ik:[-69,5], bend:-1}, ext:{aN:.9, aF:.9}, lN:HOOK, lF:HOOKF, fN:0}),
+     A:SUP({aN:{ik:[-72,4], bend:-1}, aF:{ik:[-71,5], bend:-1}, ext:{aN:.9, aF:.9, n:1.35}, head:181, face:72, lN:HOOK, lF:HOOKF, fN:0,
+       hi:['h'], arrows:[{at:'head', dir:180, len:11}]})}},
+ {id:5, pos:'Háton', name:'Fenékemelés',
+  how:'Térdek felhúzva, kezek a fenék alatt összefogva. Emeld meg a feneked, és nyújtózz a kezeddel a boka irányába.',
+  kind:'hold', d:{n:3,s:30},
+  P:{rest:SUP({aN:{ik:[-6,4], bend:1}, aF:{ik:[-5,4], bend:1}, lN:{ik:[40,5], bend:1}, lF:{ik:[41,5], bend:1}, fN:0}),
+     A:SUP({hip:[0,27], sh:[-44,8], head:180, face:90, aN:{ik:[6,4], bend:1}, aF:{ik:[7,4], bend:1},
+       lN:{ik:[40,5], bend:1}, lF:{ik:[41,5], bend:1}, fN:0, hi:['t','aN','aF'],
+       arrows:[{at:'hip', dir:90},{at:'handN', dir:0, len:10}]})}},
+ {id:6, pos:'Hason', name:'Lapockazárás',
+  how:'Hasonfekvés, kar a törzs mellett, tenyér és homlok a talajon. Húzd össze a lapockáidat.',
+  kind:'hold', d:{n:3,s:30},
+  P:{rest:PRO({}),
+     A:PRO({curve:-1.5, aN:[3,0], hi:['t'], arrows:[{at:'sho', dir:90},{at:'mid', dir:180, len:10}]})}},
+ {id:7, pos:'Hason', name:'Fejemelés',
+  how:'Homlok a kézfejeken. Emeld a homlokod 0,5–1 cm-re a kezekről, majd tedd vissza. A váll laza.',
+  kind:'reps', d:{n:3,r:15}, seq:[['T',.9,.6],['rest',.9,.3]], cue:{up:'Emeld', hold:'Tartsd', down:'Le'},
+  P:{rest:PRO({aN:HANDS_HEAD, aF:{ik:[-63,7], bend:-1}, ext:{aN:.45, aF:.45}, head:156, face:-108}),
+     A:PRO({aN:HANDS_HEAD, aF:{ik:[-63,7], bend:-1}, ext:{aN:.45, aF:.45}, head:146, face:-98, hi:['h'], arrows:[{at:'head', dir:90, len:9}]})}},
+ {id:8, pos:'Hason', name:'Fejemelés + fordítás',
+  how:'Homlok a kézfejeken. Emeld meg kicsit a fejed, fordítsd oldalra, majd vissza. Felváltva mindkét irányba.',
+  kind:'reps', sides:'alt', d:{n:3,r:20}, seq:[['T',1,.4],['rest',1,.2]], sideLbl:{A:'jobbra', B:'balra'}, cue:{up:'Emeld, fordítsd', hold:'Tartsd', down:'Vissza'},
+  P:{rest:PRO({aN:HANDS_HEAD, aF:{ik:[-63,7], bend:-1}, ext:{aN:.45, aF:.45}, head:156, face:-108}),
+     A:PRO({aN:HANDS_HEAD, aF:{ik:[-63,7], bend:-1}, ext:{aN:.45, aF:.45}, head:147, face:-60, hi:['h'], arrows:[{rot:1}]}),
+     B:PRO({aN:HANDS_HEAD, aF:{ik:[-63,7], bend:-1}, ext:{aN:.45, aF:.45}, head:147, face:-130, hi:['h'], arrows:[{rot:-1}]})}},
+ {id:9, pos:'Négykézláb', name:'Cicahát',
+  how:'Négykézláb. Lassan domborítsd a hátad (cicahát, fej le), majd homoríts (fej előre). Ha könnyen megy, emeld 15-re.',
+  kind:'reps', cycle:true, d:{n:1,r:10}, seq:[['A',2,.6],['B',2.4,.6],['rest',1.4,.2]], cue:{A:'Domboríts', B:'Homoríts', rest:'Középre'},
+  P:{rest:QUAD({}),
+     A:QUAD({curve:11, head:238, face:-25, hi:['t'], arrows:[{at:'mid', dir:90}]}),
+     B:QUAD({curve:-8, head:168, face:120, hi:['t'], arrows:[{at:'mid', dir:-90, len:9}]})}},
+ {id:10, pos:'Négykézláb', name:'Ellentétes kar–láb emelés',
+  how:'Négykézláb. Emeld fel függőlegesen pár centire az egyik kezed és a másik oldali térded, majd tedd vissza. Felváltva.',
+  kind:'reps', sides:'alt', d:{n:3,r:20}, seq:[['T',1,.5],['rest',1,.3]], sideLbl:{A:'bal kéz + jobb térd', B:'jobb kéz + bal térd'}, cue:{up:'Emeld', hold:'Tartsd', down:'Le'},
+  P:{rest:QUAD({}),
+     A:QUAD({aN:[-123,-121], lF:{ik:[34,13], bend:-1}, hi:['aN','lF'], arrows:[{at:'handN', dir:90, len:9},{at:'kneeF', dir:90, len:9}]}),
+     B:QUAD({aF:[-124,-122], lN:{ik:[34,13], bend:-1}, hi:['aF','lN'], arrows:[{at:'handF', dir:90, len:9},{at:'kneeN', dir:90, len:9}]})}},
+ {id:11, pos:'Négykézláb', name:'Ellentétes kar–láb tartás',
+  how:'Négykézláb. Nyújtsd ki előre az egyik karod és hátra a másik oldali lábad, tartsd 5–10 mp-ig, majd vissza. Felváltva.',
+  kind:'reps', sides:'alt', d:{n:1,r:10,h:7}, seq:[['T',1.5,'H'],['rest',1.5,.8]], sideLbl:{A:'bal kar + jobb láb', B:'jobb kar + bal láb'}, cue:{up:'Nyújtsd', hold:'Tartsd', down:'Vissza'},
+  P:{rest:QUAD({}),
+     A:QUAD({aN:[178,180], lF:[1,0], fF:-80, hi:['aN','lF'], arrows:[{at:'handN', dir:180},{at:'toeF', dir:0}]}),
+     B:QUAD({aF:[179,181], lN:[1,0], fN:-80, hi:['aF','lN'], arrows:[{at:'handF', dir:180},{at:'toeN', dir:0}]})}},
+ {id:12, pos:'Négykézláb', name:'Azonos oldali kar–láb emelés',
+  how:'Négykézláb. Emeld ki ugyanazon oldali kart előre és lábat hátra, majd vissza. Felváltva oldalanként.',
+  kind:'reps', sides:'alt', d:{n:1,r:10,h:2}, seq:[['T',1.5,'H'],['rest',1.5,.6]], sideLbl:{A:'bal oldal', B:'jobb oldal'}, cue:{up:'Nyújtsd', hold:'Tartsd', down:'Vissza'},
+  P:{rest:QUAD({}),
+     A:QUAD({aN:[178,180], lN:[1,0], fN:-80, hi:['aN','lN'], arrows:[{at:'handN', dir:180},{at:'toeN', dir:0}]}),
+     B:QUAD({aF:[179,181], lF:[1,0], fF:-80, hi:['aF','lF'], arrows:[{at:'handF', dir:180},{at:'toeF', dir:0}]})}},
+ {id:13, pos:'Háton', name:'Hasprés',
+  how:'Hanyatt, térdek felhúzva. A törzs óvatos megemelése a térdek felé nyúlva, majd lassan vissza.',
+  kind:'reps', d:{n:3,r:15}, seq:[['T',1.2,.5],['rest',1.2,.3]], cue:{up:'Fel', hold:'Tartsd', down:'Le'},
+  P:{rest:SUP({lN:HOOK, lF:HOOKF, fN:0, aN:[2,1], aF:[0,0]}),
+     A:SUP({torso:153, head:162, face:66, aN:[14,12], aF:[13,11], lN:HOOK, lF:HOOKF, fN:0, hi:['t'], arrows:[{at:'sho', dir:63}]})}},
+ {id:14, pos:'Háton', name:'Lábnyújtás 45°-ban',
+  how:'Két láb egymás mellé húzva, combok függőlegesen. Az egyik lábat nyújtsd ki 45°-ban, vissza, majd csere. A medence stabil marad.',
+  kind:'reps', sides:'alt', d:{n:3,r:20}, seq:[['T',1.4,.4],['rest',1.4,.3]], sideLbl:{A:'bal láb', B:'jobb láb'}, cue:{up:'Nyújtsd', hold:'Tartsd', down:'Vissza'},
+  P:{rest:SUP({lN:[90,0], lF:[90,0], fN:85}),
+     A:SUP({lN:[45,45], lF:[90,0], fN:30, fF:85, hi:['lN'], arrows:[{at:'toeN', dir:45}]}),
+     B:SUP({lN:[90,0], lF:[45,45], fN:85, fF:30, hi:['lF'], arrows:[{at:'toeF', dir:45}]})}},
+ {id:15, pos:'Sarokülés', name:'Nyújtózás sarokülésben',
+  how:'Sarokülésből hajolj előre, homlok a talaj felé, és nyújtózz a karjaiddal előre.',
+  kind:'hold', d:{n:3,s:30},
+  P:{rest:{hip:[0,16], torso:92, head:96, face:180, aN:{ik:[-20,22], bend:1}, aF:{ik:[-18,23], bend:1}, lN:[198.9,0], lF:[198,0], fN:0},
+     A:{hip:[2,15], torso:186, head:193, face:-95, aN:[183,183], aF:[184,184], ext:{aN:1.05, aF:1.05}, lN:[198.9,0], lF:[198,0], fN:0,
+       hi:['aN','aF','t'], arrows:[{at:'handN', dir:180}]}}},
+];
+for (const ex of EX){ for (const k in ex.P) ex.P[k] = resolve(ex.P[k]); ex.sides = ex.sides || 'none'; }
+
+/* ================= storage ================= */
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+};
+const DEF = {rest:15, sw:5, prep:8, tempo:1, beep:true, voice:true, count:true};
+let S = Object.assign({}, DEF, store.get('gt1.set', {}));
+let C = store.get('gt1.cfg', {});
+let LOG = store.get('gt1.log', []);
+const saveS = () => store.set('gt1.set', S), saveC = () => store.set('gt1.cfg', C), saveL = () => store.set('gt1.log', LOG);
+const cfg = ex => Object.assign({}, ex.d, C[ex.id] || {});
+const isOn = ex => !(C[ex.id] && C[ex.id].off);
+
+/* ================= planning ================= */
+function planSets(ex){
+  const c = cfg(ex), out = [];
+  if (ex.kind === 'hold'){
+    if (ex.sides === 'split'){ for (let i=0;i<c.nA;i++) out.push({side:'A', secs:c.s}); for (let i=0;i<c.nB;i++) out.push({side:'B', secs:c.s}); }
+    else if (ex.sides === 'each'){ for (let i=0;i<c.n;i++){ out.push({side:'A', secs:c.s}); out.push({side:'B', secs:c.s}); } }
+    else for (let i=0;i<c.n;i++) out.push({side:null, secs:c.s});
+  } else for (let i=0;i<c.n;i++) out.push({reps:c.r, alt:ex.sides === 'alt'});
+  return out;
+}
+function repSeq(ex){
+  const c = cfg(ex);
+  return ex.seq.map(([k, mv, hd]) => [k, mv*S.tempo, hd === 'H' ? c.h : hd*S.tempo]);
+}
+const repDur = ex => repSeq(ex).reduce((a, s) => a + s[1] + s[2], 0);
+function doseText(ex){
+  const c = cfg(ex);
+  if (ex.kind === 'hold'){
+    if (ex.sides === 'split') return `${c.nA} × ${c.s} mp ${ex.sideLbl.A}, ${c.nB} × ${c.s} mp ${ex.sideLbl.B}`;
+    if (ex.sides === 'each') return `${c.n} × ${c.s} mp, mindkét oldalra`;
+    return `${c.n} × ${c.s} mp`;
+  }
+  let t = (c.n > 1 ? `${c.n} × ` : '') + `${c.r} db`;
+  if (ex.sides === 'alt') t += ` (${c.r/2}–${c.r/2} oldalanként)`;
+  if (ex.seq.some(s => s[2] === 'H') && c.h > 2) t += `, ${c.h} mp tartás`;
+  return t;
+}
+function buildSteps(list){
+  const steps = [];
+  list.forEach((ex, xi) => {
+    const sets = planSets(ex);
+    steps.push({t:'prep', ex, xi, dur: xi === 0 ? S.prep + 4 : S.prep, sets});
+    sets.forEach((set, si) => {
+      if (si > 0){
+        const prev = sets[si-1], sw = !!(prev.side && set.side && prev.side !== set.side);
+        const quick = sw && ex.sides === 'each' && set.side === 'B';
+        steps.push({t:'rest', ex, xi, si, sets, dur: quick ? S.sw : S.rest, sw, from: prev.secs ? (prev.side || 'A') : 'rest', next:set});
+      }
+      steps.push({t:'work', ex, xi, si, sets, set, dur: set.secs ?? set.reps*repDur(ex)});
+    });
+  });
+  return steps;
+}
+function speakDose(ex){
+  const c = cfg(ex);
+  if (ex.kind === 'hold'){
+    if (ex.sides === 'split') return `${c.nA} sorozat ${ex.sideLbl.A}, utána ${c.nB} sorozat ${ex.sideLbl.B}, ${c.s} másodperc`;
+    return `${c.n} sorozat${ex.sides === 'each' ? ' oldalanként' : ''}, ${c.s} másodperc`;
+  }
+  return (c.n > 1 ? `${c.n} sorozat, ` : '') + (ex.sides === 'alt' ? `oldalanként ${c.r/2} ismétlés` : `${c.r} ismétlés`);
+}
+const fmtMin = s => { const m = Math.round(s/60); return m < 1 ? '<1 perc' : m + ' perc'; };
+const fmtClock = s => { s = Math.max(0, Math.round(s)); return Math.floor(s/60) + ':' + String(s%60).padStart(2, '0'); };
+
+/* ================= pose over time ================= */
+function seqAt(ex, seq, t, side){
+  let prev = ex.P.rest;
+  for (let i=0;i<seq.length;i++){
+    const [key, mv, hd] = seq[i];
+    const target = key === 'T' ? ex.P[side] : ex.P[key];
+    if (t < mv) return {pose: lerpPose(prev, target, ease(t/mv)), seg:i, part:'move'};
+    t -= mv;
+    if (t < hd) return {pose: target, seg:i, part:'hold'};
+    t -= hd; prev = target;
+  }
+  return {pose: prev, seg: seq.length-1, part:'hold'};
+}
+function demoAt(ex, t){
+  let parts;
+  if (ex.kind === 'hold'){
+    parts = [[[['T',1.3,1.8],['rest',1.1,.7]], 'A']];
+    if (ex.P.B) parts.push([[['T',1.3,1.8],['rest',1.1,.7]], 'B']);
+  } else {
+    const seq = ex.seq.map(([k, mv, hd]) => [k, mv, hd === 'H' ? 1.6 : hd]);
+    parts = [[seq, 'A']]; if (ex.P.B) parts.push([seq, 'B']);
+  }
+  const total = parts.reduce((a, [sq]) => a + sq.reduce((b, s) => b + s[1] + s[2], 0), 0) + .4;
+  t = t % total;
+  for (const [sq, side] of parts){
+    const d = sq.reduce((b, s) => b + s[1] + s[2], 0);
+    if (t < d) return seqAt(ex, sq, t, side).pose;
+    t -= d;
+  }
+  return ex.P.rest;
+}
+
+/* ================= audio + voice ================= */
+let AC = null;
+function ac(){
+  if (!AC){ try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ return null; } }
+  if (AC.state === 'suspended') AC.resume().catch(()=>{});
+  return AC;
+}
+function beep(f=880, d=.12, v=.18, when=0){
+  if (!S.beep) return; const a = ac(); if (!a) return;
+  const o = a.createOscillator(), g = a.createGain(), t0 = a.currentTime + when;
+  o.type = 'sine'; o.frequency.value = f;
+  g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(v, t0+.01); g.gain.exponentialRampToValueAtTime(.0001, t0+d);
+  o.connect(g).connect(a.destination); o.start(t0); o.stop(t0+d+.05);
+}
+const NUMS = ['nulla','egy','kettő','három','négy','öt','hat','hét','nyolc','kilenc','tíz','tizenegy','tizenkettő','tizenhárom','tizennégy','tizenöt','tizenhat','tizenhét','tizennyolc','tizenkilenc','húsz'];
+let huVoice = null;
+function pickVoice(){ try { const v = speechSynthesis.getVoices(); huVoice = v.find(x => /^hu/i.test(x.lang)) || null; } catch(e){} }
+try { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; } catch(e){}
+function say(text, interrupt=true){
+  if (!S.voice || !('speechSynthesis' in window)) return;
+  try {
+    if (interrupt) speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text); u.lang = 'hu-HU'; if (huVoice) u.voice = huVoice; u.rate = 1.05;
+    speechSynthesis.speak(u);
+  } catch(e){}
+}
+const buzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch(e){} };
+let wake = null;
+async function keepAwake(){ try { if ('wakeLock' in navigator && !wake) { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => wake = null); } } catch(e){} }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && R.on) keepAwake(); });
+
+/* ================= icons ================= */
+const IC = {
+  play:'<svg viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+  pause:'<svg viewBox="0 0 24 24"><rect x="5.5" y="4.5" width="4.5" height="15" rx="1.2" fill="currentColor"/><rect x="14" y="4.5" width="4.5" height="15" rx="1.2" fill="currentColor"/></svg>',
+  x:'<svg viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>'
+};
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ================= home views ================= */
+let view = 'torna';
+const todayKey = (d = new Date()) => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+function dayset(){ const s = new Set(); LOG.forEach(l => { if (l.full) s.add(l.day); }); return s; }
+function streak(){
+  const s = dayset(); let n = 0; const d = new Date();
+  if (!s.has(todayKey(d))) d.setDate(d.getDate()-1);
+  while (s.has(todayKey(d))){ n++; d.setDate(d.getDate()-1); }
+  return n;
+}
+function renderTorna(){
+  const on = EX.filter(isOn), est = buildSteps(on).reduce((a, s) => a + s.dur, 0);
+  const doneToday = LOG.some(l => l.day === todayKey() && l.full);
+  let groups = [], cur = null;
+  EX.forEach(ex => { if (!cur || cur.pos !== ex.pos){ cur = {pos:ex.pos, items:[]}; groups.push(cur); } cur.items.push(ex); });
+  $('#view').innerHTML = `
+    <section class="today" aria-label="Mai torna">
+      <div class="stats">
+        <div><b>${on.length}</b><span>gyakorlat</span></div>
+        <div><b>${fmtMin(est).replace(' perc','')}</b><span>perc kb.</span></div>
+        <div><b>${streak()}</b><span>nap egymás után</span></div>
+      </div>
+      <button class="go" id="go" ${on.length ? '' : 'disabled'}>${IC.play}<span>${doneToday ? 'Újra indítom' : 'Indítás'}</span></button>
+      ${doneToday ? '<div class="done-today"><i></i>A mai torna megvan.</div>' : ''}
+    </section>
+    ${groups.map(g => `<section class="group"><h3>${g.pos}</h3><ul class="list">${g.items.map(ex => `
+      <li class="ex${isOn(ex) ? '' : ' off'}" data-id="${ex.id}" tabindex="0" aria-label="${esc(ex.name)} részletei">
+        <span class="no">${ex.id}</span>
+        <span class="th">${thumbSVG(ex.P.A)}</span>
+        <div style="min-width:0"><div class="nm">${esc(ex.name)}</div><div class="ds">${esc(doseText(ex))}</div></div>
+        <label class="sw" title="Benne van a mai tornában"><input type="checkbox" id="on-${ex.id}" data-on="${ex.id}" ${isOn(ex) ? 'checked' : ''} aria-label="${esc(ex.name)} bekapcsolva"><span></span></label>
+      </li>`).join('')}</ul></section>`).join('')}
+    <p class="warn">Fájdalmat okozó mozdulatnál állj le, és kérdezd meg a gyógytornászt. A sorozatok és ismétlések minden gyakorlatnál átírhatók, ha a gyógytornász mást mond.</p>`;
+  $('#go').onclick = () => startSession(EX.filter(isOn));
+  document.querySelectorAll('[data-on]').forEach(cb => {
+    cb.onclick = e => e.stopPropagation();
+    cb.onchange = () => { const id = +cb.dataset.on; C[id] = Object.assign({}, C[id], {off: !cb.checked}); saveC(); renderTorna(); };
+  });
+  document.querySelectorAll('.ex').forEach(li => {
+    const open = () => openDetail(EX.find(x => x.id === +li.dataset.id));
+    li.onclick = e => { if (!e.target.closest('.sw')) open(); };
+    li.onkeydown = e => { if ((e.key === 'Enter' || e.key === ' ') && e.target === li){ e.preventDefault(); open(); } };
+  });
+}
+function painColor(p){ if (p == null) return ''; const h = p <= 2 ? 'var(--rest)' : p <= 5 ? 'var(--prep)' : 'var(--accent)'; return `background:${h};color:var(--bg)`; }
+function renderNaplo(){
+  const days = dayset(), now = new Date(), weeks = 15;
+  const start = new Date(now); start.setDate(start.getDate() - ((start.getDay()+6)%7) - (weeks-1)*7);
+  const partial = new Set(LOG.filter(l => !l.full).map(l => l.day));
+  let cells = '';
+  for (let i=0;i<weeks*7;i++){
+    const d = new Date(start); d.setDate(start.getDate()+i); const k = todayKey(d);
+    const cls = d > now ? '' : days.has(k) ? 'y' : partial.has(k) ? 'p' : '';
+    cells += `<i class="${cls}${k === todayKey() ? ' t' : ''}" title="${k}"${d > now ? ' style="opacity:.35"' : ''}></i>`;
+  }
+  const last30 = LOG.filter(l => l.full && (now - new Date(l.ts)) < 30*864e5).length;
+  const pains = LOG.filter(l => l.pain != null).slice(-7);
+  const avgPain = pains.length ? (pains.reduce((a, l) => a + l.pain, 0)/pains.length).toFixed(1).replace('.', ',') : '–';
+  const rows = LOG.slice().reverse().slice(0, 30).map(l => {
+    const d = new Date(l.ts);
+    return `<tr><td>${d.toLocaleDateString('hu-HU', {month:'short', day:'numeric', weekday:'short'})}</td><td>${d.toLocaleTimeString('hu-HU', {hour:'2-digit', minute:'2-digit'})}</td>
+      <td>${fmtClock(l.secs)}</td><td>${l.done}/${l.total}</td><td>${l.pain != null ? `<span class="pain" style="${painColor(l.pain)}">${l.pain}</span>` : '–'}</td>
+      <td style="white-space:normal;min-width:160px;color:var(--muted)">${esc(l.note || '')}</td></tr>`;
+  }).join('');
+  $('#view').innerHTML = `
+    <div class="cards">
+      <div class="card"><b>${streak()}</b><span>nap egymás után</span></div>
+      <div class="card"><b>${last30}</b><span>teljes torna az elmúlt 30 napban</span></div>
+      <div class="card"><b>${avgPain}</b><span>átlagos fájdalom (utolsó 7 bejegyzés, 0–10)</span></div>
+    </div>
+    <div class="heat-wrap"><div class="heat" role="img" aria-label="Az elmúlt ${weeks} hét tornái">${cells}</div>
+      <div class="legend"><span><i style="background:var(--rest)"></i>teljes torna</span><span><i style="background:var(--accent)"></i>részleges</span><span><i style="background:var(--sunk)"></i>kimaradt</span></div></div>
+    <div class="log-wrap">${LOG.length ? `<table class="log"><thead><tr><th>Nap</th><th>Idő</th><th>Hossz</th><th>Gyak.</th><th>Fájd.</th><th>Megjegyzés</th></tr></thead><tbody>${rows}</tbody></table>`
+      : '<div class="empty">Még nincs bejegyzés. Egy torna végén ide kerül a dátum, a hossz és a fájdalom-értékelés.</div>'}</div>
+    <p class="warn">A napló ebben a böngészőben tárolódik ezen az eszközön.</p>`;
+}
+function stepper(id, val, unit, min, max, stepv){
+  return `<div class="step" data-step="${id}" data-min="${min}" data-max="${max}" data-s="${stepv}">
+    <button aria-label="Csökkentés" data-d="-1">−</button><output id="st-${id}">${val}${unit ? ' ' + unit : ''}</output><button aria-label="Növelés" data-d="1">+</button></div>`;
+}
+function bindSteppers(root, get, set, unitOf){
+  root.querySelectorAll('[data-step]').forEach(el => {
+    el.querySelectorAll('button').forEach(b => b.onclick = () => {
+      const k = el.dataset.step, v = Math.min(+el.dataset.max, Math.max(+el.dataset.min, get(k) + (+b.dataset.d)*(+el.dataset.s)));
+      set(k, v); el.querySelector('output').textContent = v + (unitOf(k) ? ' ' + unitOf(k) : '');
+    });
+  });
+}
+let resetArm = 0;
+function renderBeall(){
+  const tempo = [[1.3,'Lassú'],[1,'Közepes'],[.8,'Gyors']];
+  const tg = (k, l, sub) => `<div class="row"><div class="l">${l}${sub ? `<small>${sub}</small>` : ''}</div><label class="sw"><input type="checkbox" id="s-${k}" data-tg="${k}" ${S[k] ? 'checked' : ''}><span></span></label></div>`;
+  $('#view').innerHTML = `
+    <div class="set">
+      <div class="row"><div class="l">Pihenő a sorozatok között</div>${stepper('rest', S.rest, 'mp', 5, 60, 5)}</div>
+      <div class="row"><div class="l">Oldalcsere ideje<small>Mindkét oldalas gyakorlatoknál</small></div>${stepper('sw', S.sw, 'mp', 3, 20, 1)}</div>
+      <div class="row"><div class="l">Felkészülés gyakorlat előtt<small>Ennyi idő van elhelyezkedni</small></div>${stepper('prep', S.prep, 'mp', 3, 30, 1)}</div>
+      <div class="row"><div class="l">Ismétlések tempója</div><div class="seg">${tempo.map(([v, l]) => `<button data-tempo="${v}" aria-pressed="${S.tempo === v}">${l}</button>`).join('')}</div></div>
+    </div>
+    <div class="set">
+      ${tg('beep', 'Hangjelzés', 'Sípolás az utolsó 3 másodpercben és váltáskor')}
+      ${tg('voice', 'Hangos bemondás', 'Gyakorlat neve, pihenő, oldalcsere (magyar hang, ha a készülék tud)')}
+      ${tg('count', 'Ismétlések számolása', 'Hangosan számol ismétléses gyakorlatoknál')}
+    </div>
+    <div class="set"><div class="row"><div class="l">Gyógytornász-féle alapértékek<small>Minden sorozat-, ismétlés- és időbeállítás visszaáll a lap szerintire</small></div>
+      <button class="ghost danger" id="reset">Visszaállítás</button></div></div>`;
+  bindSteppers($('#view'), k => S[k], (k, v) => { S[k] = v; saveS(); }, () => 'mp');
+  document.querySelectorAll('[data-tempo]').forEach(b => b.onclick = () => { S.tempo = +b.dataset.tempo; saveS(); renderBeall(); });
+  document.querySelectorAll('[data-tg]').forEach(cb => cb.onchange = () => { S[cb.dataset.tg] = cb.checked; saveS(); if (cb.checked && cb.dataset.tg === 'beep') beep(); if (cb.checked && cb.dataset.tg === 'voice') say('Hang bekapcsolva'); });
+  $('#reset').onclick = () => {
+    const b = $('#reset');
+    if (Date.now() - resetArm < 3000){ C = {}; saveC(); S = Object.assign({}, DEF); saveS(); renderBeall(); return; }
+    resetArm = Date.now(); b.textContent = 'Biztos? Koppints újra'; setTimeout(() => { if (b.isConnected) b.textContent = 'Visszaállítás'; }, 3000);
+  };
+}
+function render(){
+  document.querySelectorAll('[data-v]').forEach(b => b.setAttribute('aria-selected', b.dataset.v === view));
+  ({torna:renderTorna, naplo:renderNaplo, beall:renderBeall})[view]();
+}
+document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { view = b.dataset.v; try { sessionStorage.setItem('gt1.view', view); } catch(e){} render(); });
+try { view = sessionStorage.getItem('gt1.view') || 'torna'; } catch(e){}
+
+/* ================= detail sheet ================= */
+let sheetDemo = null;
+function closeOverlay(){ $('#overlay').innerHTML = ''; sheetDemo = null; document.removeEventListener('keydown', escClose); }
+function escClose(e){ if (e.key === 'Escape') closeOverlay(); }
+function openDetail(ex){
+  const c = cfg(ex);
+  const fields = ex.kind === 'hold'
+    ? (ex.sides === 'split' ? [['nA','Sorozat – ' + ex.sideLbl.A,1,10,1,''],['nB','Sorozat – ' + ex.sideLbl.B,1,10,1,''],['s','Időtartam',10,120,5,'mp']]
+       : [['n', ex.sides === 'each' ? 'Sorozat oldalanként' : 'Sorozat',1,10,1,''],['s','Időtartam',10,120,5,'mp']])
+    : [['n','Sorozat',1,10,1,''],['r', ex.sides === 'alt' ? 'Ismétlés (két oldal együtt)' : 'Ismétlés', ex.sides === 'alt' ? 2 : 1, 40, ex.sides === 'alt' ? 2 : 1,'db']]
+        .concat(ex.seq.some(s => s[2] === 'H') ? [['h','Tartás',1,15,1,'mp']] : []);
+  $('#overlay').innerHTML = `<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="dt-name">
+    <div class="sheet-h"><span class="tag">${ex.id}. gyakorlat · ${ex.pos}</span><button class="x" id="dt-x" aria-label="Bezárás">${IC.x}</button></div>
+    <div class="stage"><svg viewBox="${VB}" class="fg" aria-hidden="true"><rect class="mat" x="-126" y="0.5" width="240" height="6" rx="3"/><g id="dt-fig"></g></svg></div>
+    <h2 id="dt-name">${esc(ex.name)}</h2>
+    <div class="dose" id="dt-dose">${esc(doseText(ex))}</div>
+    <p>${esc(ex.how)}</p>
+    <div class="set edit">${fields.map(([k, l, mn, mx, st, u]) => `<div class="row"><div class="l">${esc(l)}</div>${stepper(k, c[k], u, mn, mx, st)}</div>`).join('')}</div>
+    <div class="acts"><button class="go" id="dt-go">${IC.play}<span>Csak ezt indítom</span></button>
+      <button class="ghost" id="dt-def">Gyógytornász szerinti</button></div>
+  </div></div>`;
+  const unit = Object.fromEntries(fields.map(f => [f[0], f[5]]));
+  bindSteppers($('.sheet'), k => cfg(ex)[k], (k, v) => { C[ex.id] = Object.assign({}, C[ex.id], {[k]: v}); saveC(); $('#dt-dose').textContent = doseText(ex); }, k => unit[k]);
+  $('#dt-x').onclick = closeOverlay;
+  $('#scrim').onclick = e => { if (e.target.id === 'scrim') closeOverlay(); };
+  $('#dt-go').onclick = () => { closeOverlay(); startSession([ex]); };
+  $('#dt-def').onclick = () => { const off = C[ex.id] && C[ex.id].off; C[ex.id] = off ? {off:true} : {}; saveC(); openDetail(ex); };
+  document.addEventListener('keydown', escClose);
+  sheetDemo = {ex, t0: performance.now()/1000, el: $('#dt-fig')};
+  $('#dt-x').focus();
+}
+
+/* ================= player ================= */
+const R = {on:false, steps:[], i:0, t0:0, paused:false, pT:0, list:[], start:0, last:{}, pausedSecs:0};
+const now = () => performance.now()/1000;
+const el = () => R.paused ? R.pT - R.t0 : now() - R.t0;
+function startSession(list){
+  if (!list.length) return;
+  ac(); keepAwake();
+  closeOverlay();
+  Object.assign(R, {on:true, list, steps: buildSteps(list), i:0, paused:false, start: Date.now(), pausedSecs:0, maxXi:-1});
+  $('#player').hidden = false; $('#app').setAttribute('aria-hidden', 'true');
+  $('#pl-prog').innerHTML = list.map(() => '<i><b></b></i>').join('');
+  enter(0);
+}
+function enter(i){
+  R.i = i; R.t0 = now(); if (R.paused) R.pT = R.t0;
+  R.last = {sec:null, rep:-1, seg:-1};
+  const st = R.steps[i], ex = st.ex, c = cfg(ex);
+  if (st.t === 'work') R.maxXi = Math.max(R.maxXi, st.xi);
+  $('#pl-name').textContent = ex.name;
+  $('#pl-pos').textContent = ex.pos;
+  $('#pl-how').textContent = ex.how;
+  $('#pl-count').textContent = `${st.xi+1} / ${R.list.length}`;
+  const ph = st.t === 'work' ? 'var(--accent)' : st.t === 'rest' ? 'var(--rest)' : 'var(--prep)';
+  $('#player').style.setProperty('--ph', ph);
+  $('#pl-phase').textContent = st.t === 'prep' ? (st.xi === 0 ? 'Kezdünk · helyezkedj el' : 'Következik · helyezkedj el') : st.t === 'rest' ? (st.sw ? 'Oldalcsere' : 'Pihenő') : 'Munka';
+  const dots = st.sets.map((s, k) => `<i class="${k < (st.si ?? 0) || (st.t === 'rest' && k < st.si) ? 'd' : (st.t === 'work' && k === st.si) ? 'c' : ''}"></i>`).join('');
+  $('#pl-dots').innerHTML = dots;
+  const set = st.t === 'work' ? st.set : st.t === 'rest' ? st.next : st.sets[0];
+  const side = set && set.side ? ex.sideLbl[set.side] : null;
+  $('#pl-side').hidden = !side || st.t === 'rest' && !st.sw; if (side) $('#pl-side').textContent = side;
+  let next = '';
+  if (st.t === 'prep') next = doseText(ex);
+  else if (st.t === 'rest') next = `Következő: ${st.si+1}. sorozat${side ? ' · ' + side : ''}`;
+  else { const nx = R.steps.slice(i+1).find(s => s.t === 'prep'); next = st.si + 1 < st.sets.length ? `${st.si+1}. / ${st.sets.length} sorozat` : nx ? `Utána: ${nx.ex.name}` : 'Utolsó sorozat'; }
+  $('#pl-next').textContent = next;
+  $('#pl-unit').textContent = st.t === 'work' && st.set.reps ? (st.set.alt ? `/ ${st.set.reps/2} oldalt` : `/ ${st.set.reps} ismétlés`) : 'másodperc';
+  // announcements
+  if (st.t === 'prep') say(`${st.xi === 0 ? '' : 'Következik: '}${ex.name.replace(/–/g, ' ').replace('+', 'és')}. ${speakDose(ex)}`);
+  else if (st.t === 'rest'){ beep(520, .3, .2); buzz(80); say(st.sw ? 'Oldalcsere. ' + (side || '') : 'Pihenő'); }
+  else { beep(990, .35, .22); buzz(120); say(side ? side : (st.si === st.sets.length-1 && st.sets.length > 1 ? 'Utolsó sorozat' : 'Rajta')); }
+  updatePlay();
+}
+function updatePlay(){
+  $('#pl-play').innerHTML = R.paused ? IC.play : IC.pause;
+  $('#pl-play').setAttribute('aria-label', R.paused ? 'Folytatás' : 'Szünet');
+  $('#player').classList.toggle('paused', R.paused);
+}
+function togglePause(){
+  if (!R.on) return;
+  if (R.paused){ R.pausedSecs += now() - R.pT; R.t0 += now() - R.pT; R.paused = false; ac(); }
+  else { R.paused = true; R.pT = now(); try { speechSynthesis.cancel(); } catch(e){} }
+  updatePlay();
+}
+function skip(){ if (R.i + 1 < R.steps.length) enter(R.i + 1); else finish(); }
+function prevEx(){
+  const st = R.steps[R.i];
+  let target = R.steps.findIndex(s => s.t === 'prep' && s.xi === st.xi);
+  if (st.t === 'prep' && el() < 2 && st.xi > 0) target = R.steps.findIndex(s => s.t === 'prep' && s.xi === st.xi - 1);
+  enter(Math.max(0, target));
+}
+let exitArm = 0;
+function exitPlayer(force){
+  if (!force && Date.now() - exitArm > 3000){
+    exitArm = Date.now(); $('#pl-exit').classList.add('sure'); $('#pl-exit span').textContent = 'Biztos? Koppints újra';
+    setTimeout(() => { $('#pl-exit').classList.remove('sure'); $('#pl-exit span').textContent = 'Kilépés'; }, 3000);
+    return;
+  }
+  const done = R.maxXi; R.on = false;
+  try { speechSynthesis.cancel(); } catch(e){}
+  if (wake){ wake.release().catch(()=>{}); wake = null; }
+  $('#player').hidden = true; $('#app').removeAttribute('aria-hidden');
+  $('#pl-exit').classList.remove('sure'); $('#pl-exit span').textContent = 'Kilépés';
+  if (!force && done >= 2){
+    LOG.push({ts: Date.now(), day: todayKey(), secs: Math.round((Date.now() - R.start)/1000 - R.pausedSecs), done: done, total: R.list.length, full:false, pain:null});
+    saveL();
+  }
+  render();
+}
+function finish(){
+  const entry = {ts: Date.now(), day: todayKey(), secs: Math.round((Date.now() - R.start)/1000 - R.pausedSecs), done: R.list.length, total: R.list.length,
+    full: R.list.length >= Math.min(10, EX.filter(isOn).length), pain:null, note:''};
+  LOG.push(entry); saveL();
+  exitPlayer(true);
+  beep(660, .15, .2); beep(880, .15, .2, .16); beep(1180, .4, .2, .32); buzz([80, 60, 160]);
+  say('Kész. Szép munka!');
+  $('#overlay').innerHTML = `<div class="scrim"><div class="sheet fin" role="dialog" aria-modal="true" aria-labelledby="fin-h">
+    <div class="sheet-h"><span class="tag">${new Date().toLocaleDateString('hu-HU', {month:'long', day:'numeric', weekday:'long'})}</span><button class="x" id="fin-x" aria-label="Bezárás">${IC.x}</button></div>
+    <h2 id="fin-h">${entry.full ? 'Megvan a mai torna' : 'Gyakorlat kész'}</h2>
+    <div class="cards" style="margin-top:14px"><div class="card"><b>${fmtClock(entry.secs)}</b><span>időtartam</span></div><div class="card"><b>${entry.done}</b><span>gyakorlat</span></div><div class="card"><b>${streak()}</b><span>nap egymás után</span></div></div>
+    <p style="margin-top:18px;font-weight:700">Mennyire fájt ma a hátad / nyakad?</p>
+    <div class="painsel" id="painsel">${Array.from({length:11}, (_, k) => `<button data-p="${k}" aria-pressed="false">${k}</button>`).join('')}</div>
+    <div class="painlbl"><span>0 = semmi</span><span>10 = elviselhetetlen</span></div>
+    <textarea id="fin-note" placeholder="Megjegyzés a gyógytornásznak (pl. melyik gyakorlatnál húzódott)"></textarea>
+    <div class="acts" style="margin-top:14px"><button class="go" id="fin-ok"><span>Mentés a naplóba</span></button></div>
+  </div></div>`;
+  const upd = () => { saveL(); };
+  document.querySelectorAll('[data-p]').forEach(b => b.onclick = () => {
+    entry.pain = +b.dataset.p; upd();
+    document.querySelectorAll('[data-p]').forEach(x => x.setAttribute('aria-pressed', x === b));
+  });
+  $('#fin-note').oninput = e => { entry.note = e.target.value.slice(0, 500); upd(); };
+  const close = () => { closeOverlay(); view = 'naplo'; render(); };
+  $('#fin-ok').onclick = close; $('#fin-x').onclick = close;
+}
+$('#pl-play').onclick = togglePause;
+$('#pl-skip').onclick = skip;
+$('#pl-prev').onclick = prevEx;
+$('#pl-exit').onclick = () => exitPlayer(false);
+document.addEventListener('keydown', e => {
+  if (!R.on) return;
+  if (e.key === ' ' && !e.target.closest('button')){ e.preventDefault(); togglePause(); }
+  else if (e.key === 'ArrowRight') skip();
+  else if (e.key === 'ArrowLeft') prevEx();
+  else if (e.key === 'Escape') exitPlayer(false);
+});
+
+function tickPlayer(){
+  const st = R.steps[R.i], ex = st.ex, e = el();
+  if (!R.paused && e >= st.dur){ if (R.i + 1 < R.steps.length) enter(R.i + 1); else finish(); return; }
+  const left = Math.max(0, st.dur - e);
+  let pose, big, ringK = e/st.dur, cue = '';
+  if (st.t === 'prep'){
+    pose = demoAt(ex, e); big = Math.ceil(left);
+    cue = 'Nézd a mozdulatot';
+  } else if (st.t === 'rest'){
+    const from = ex.P[st.from] || ex.P.rest;
+    pose = lerpPose(from, ex.P.rest, ease(e/1.1)); big = Math.ceil(left);
+    cue = st.sw ? 'Válts oldalt' : 'Lazíts, lélegezz';
+  } else if (st.set.secs){
+    const side = st.set.side || 'A';
+    pose = seqAt(ex, [['T',1.4,1e9]], e, side).pose; big = Math.ceil(left);
+    cue = e < 1.4 ? 'Vedd fel a helyzetet' : 'Tartsd, egyenletesen lélegezz';
+  } else {
+    const seq = repSeq(ex), d = repDur(ex), k = Math.min(st.set.reps - 1, Math.floor(e/d));
+    const side = st.set.alt ? (k % 2 ? 'B' : 'A') : 'A';
+    const r = seqAt(ex, seq, e - k*d, side);
+    pose = r.pose;
+    const shown = st.set.alt ? Math.floor(k/2) + 1 : k + 1;
+    big = shown;
+    if (st.set.alt){ const sl = ex.sideLbl[side]; const sEl = $('#pl-side'); if (sEl.textContent !== sl) sEl.textContent = sl; sEl.hidden = false; }
+    const key = seq[r.seg][0], cu = ex.cue || {};
+    cue = ex.cycle ? (cu[key] || '') : key === 'rest' ? (r.part === 'move' ? cu.down : '') : (r.part === 'move' ? cu.up : cu.hold);
+    if (r.part === 'hold' && key === 'T' && seq[r.seg][2] >= 3){ cue = `${cu.hold} · ${Math.ceil(seq[r.seg][2] - (e - k*d - seq[r.seg][1]))}`; }
+    if (!R.paused && k !== R.last.rep){
+      R.last.rep = k;
+      if (S.count && S.voice) say(NUMS[shown] || String(shown)); else beep(640, .07, .12);
+    }
+  }
+  // countdown beeps
+  const sec = Math.ceil(left);
+  if (!R.paused && sec !== R.last.sec){
+    if (R.last.sec !== null && sec <= 3 && sec >= 1 && (st.t !== 'work' || st.set.secs)) beep(st.t === 'work' ? 740 : 620, .1, .16);
+    R.last.sec = sec;
+  }
+  $('#pl-fig').innerHTML = figSVG(pose, now());
+  const bigEl = $('#pl-big'); if (bigEl.textContent !== String(big)) bigEl.textContent = big;
+  $('#pl-arc').setAttribute('stroke-dashoffset', (276.46 * Math.min(1, ringK)).toFixed(1));
+  const cueEl = $('#pl-cue'); if (cueEl.textContent !== cue) cueEl.textContent = cue;
+  const bars = $('#pl-prog').children;
+  for (let x = 0; x < bars.length; x++){
+    let k = x < st.xi ? 1 : x > st.xi ? 0 : null;
+    if (k === null){
+      const own = R.steps.filter(s => s.xi === x), tot = own.reduce((a, s) => a + s.dur, 0);
+      let doneT = 0; for (const s of own){ if (R.steps.indexOf(s) < R.i) doneT += s.dur; }
+      k = (doneT + e)/tot;
+    }
+    bars[x].firstChild.style.transform = `scaleX(${Math.min(1, k).toFixed(3)})`;
+  }
+}
+function frame(){
+  try {
+    if (R.on) tickPlayer();
+    if (sheetDemo && sheetDemo.el.isConnected) sheetDemo.el.innerHTML = figSVG(demoAt(sheetDemo.ex, now() - sheetDemo.t0), now());
+  } catch(err){ console.error(err); }
+  requestAnimationFrame(frame);
+}
+render();
+requestAnimationFrame(frame);
+</script>
+<!--wrap-->
+</body>
+</html>
