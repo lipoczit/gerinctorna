@@ -400,6 +400,10 @@ const HANDS_HEAD = {ik:[-64,6], bend:-1};
 const KNEEL_REST = {hip:[0,16], torso:92, head:96, face:180, aN:{ik:[-20,22], bend:1}, aF:{ik:[-18,23], bend:1}, lN:[198.9,0], lF:[198,0], fN:0};
 const KNEEL_FOLD = {hip:[2,15], torso:186, head:193, face:-95, aN:[183,183], aF:[184,184], ext:{aN:1.05, aF:1.05}, lN:[198.9,0], lF:[198,0], fN:0,
   hi:['aN','aF','t'], arrows:[{at:'handN', dir:180}]};
+const SIT_VB = '-120 -124 240 130';
+const CHAIR = [{t:'box', x:-14, w:44, h:33},{t:'wall', x:30, h:92}];
+const SIT = o => Object.assign({hip:[14,39], torso:90, head:92, face:180, aN:{ik:[-2,46], bend:1}, aF:{ik:[0,46], bend:1},
+  lN:[180,-90], lF:[181,-90], fN:180}, o);
 const STAND = o => Object.assign({hip:[0,72], torso:84, head:90, face:180, aN:[-100,-96], aF:[-98,-94],
   lN:{ik:[-12,4], bend:-1}, lF:{ik:[-10,4], bend:-1}, fN:180}, o);
 
@@ -543,10 +547,52 @@ const EX = [
   how:'Sarokülésből hajolj előre, a karok előre nyújtva, homlok a talaj felé. Ha a has nem fér, nyisd szét a térdeidet. Lélegezz a derekad felé.',
   kind:'hold', d:{n:2,s:30},
   P:{rest:KNEEL_REST, A:KNEEL_FOLD}},
+
+ /* ---- Iroda: széken végezhető kímélő mozgások ---- */
+ {id:201, prog:'iroda', pos:'Ülve', name:'Medencebillegetés ülve',
+  how:'Ülj a szék közepére, talp a földön. Billentsd a medencédet hátra (a derék kicsit görbül), majd előre (a derék kicsit homorodik). Kis, lassú, fájdalommentes mozdulat; a felsőtest szinte nem mozdul.',
+  kind:'reps', cycle:true, d:{n:1,r:10}, seq:[['A',2,.3],['B',2.2,.3],['rest',1.4,.2]], cue:{A:'Medence hátra', B:'Medence előre', rest:'Középre'},
+  vb:SIT_VB, props:CHAIR,
+  P:{rest:SIT({}),
+     A:SIT({torso:95, head:96, curve:-4, hi:['t'], arrows:[{at:'hip', dir:0, len:8}]}),
+     B:SIT({torso:87, head:89, curve:4, hi:['t'], arrows:[{at:'hip', dir:180, len:8}]})}},
+ {id:202, prog:'iroda', pos:'Ülve', name:'Térdemelés ülve',
+  how:'Egyenes háttal ülve emeld fel az egyik térded pár centire, tartsd egy pillanatig, majd tedd le. Felváltva, mintha ülve menetelnél.',
+  kind:'reps', sides:'alt', d:{n:1,r:20}, seq:[['T',1.1,.5],['rest',1.1,.3]], sideLbl:{A:'bal térd', B:'jobb térd'}, cue:{up:'Emeld', hold:'Tartsd', down:'Le'},
+  vb:SIT_VB, props:CHAIR,
+  P:{rest:SIT({}),
+     A:SIT({lN:[163,-96], fN:180, aN:{ik:[-2,52], bend:1}, hi:['lN'], arrows:[{at:'kneeN', dir:90, len:9}]}),
+     B:SIT({lF:[164,-95], fF:180, aF:{ik:[0,52], bend:1}, hi:['lF'], arrows:[{at:'kneeF', dir:90, len:9}]})}},
+ {id:203, prog:'iroda', pos:'Ülve', name:'Előrehajlás ülve',
+  how:'Térdek szét, a kezed csúsztasd lassan a sípcsontodon lefelé, a fej és a hát lazán görbül. Tartsd, majd a kezeddel a combodon feltolva magad, lassan egyenesedj fel. Ha a lábba sugárzó fájdalmat okoz vagy erősít, hagyd ki.',
+  kind:'reps', d:{n:1,r:5,h:5}, seq:[['T',2.5,'H'],['rest',2.8,1]], cue:{up:'Hajolj le lassan', hold:'Lazíts', down:'Told fel magad'},
+  vb:SIT_VB, props:CHAIR,
+  P:{rest:SIT({}),
+     A:SIT({torso:132, head:150, face:-110, curve:-5, aN:{ik:[-22,18], bend:1}, aF:{ik:[-20,19], bend:1}, hi:['t'], arrows:[{at:'mid', dir:90, len:8}]})}},
+ {id:204, prog:'iroda', pos:'Ülve', name:'Törzsfordítás ülve',
+  how:'Egyenes háttal ülve, kezek keresztben a mellkason. Fordítsd a vállaidat lassan az egyik oldalra, a medence és a térdek előre néznek. Csak addig, amíg kellemes; vissza, majd a másik irányba.',
+  kind:'reps', sides:'alt', d:{n:1,r:10,h:3}, seq:[['T',2,'H'],['rest',2,.5]], sideLbl:{A:'jobbra', B:'balra'}, cue:{up:'Fordulj', hold:'Tartsd', down:'Vissza'},
+  vb:SIT_VB, props:CHAIR,
+  P:{rest:SIT({aN:{ik:[4,72], bend:-1}, aF:{ik:[6,74], bend:-1}}),
+     A:SIT({aN:{ik:[4,72], bend:-1}, aF:{ik:[6,74], bend:-1}, face:160, hi:['t'], arrows:[{rot:1, at:'sho'}]}),
+     B:SIT({aN:{ik:[4,72], bend:-1}, aF:{ik:[6,74], bend:-1}, face:200, hi:['t'], arrows:[{rot:-1, at:'sho'}]})}},
+ {id:205, prog:'iroda', pos:'Ülve', name:'Lapockazárás ülve',
+  how:'Ülj fel egyenesen, a fejtetőd nyúlik a plafon felé. Húzd hátra és kicsit lefelé a lapockáidat, tartsd, majd engedd el. Jó „testtartás-újraindítás” a gép előtt.',
+  kind:'reps', d:{n:1,r:10,h:3}, seq:[['T',1.2,'H'],['rest',1.2,.4]], cue:{up:'Lapockák hátra', hold:'Tartsd', down:'Engedd'},
+  vb:SIT_VB, props:CHAIR,
+  P:{rest:SIT({torso:92}),
+     A:SIT({torso:89, head:90, hi:['t'], arrows:[{at:'sho', dir:0, len:9}]})}},
+ {id:206, prog:'iroda', pos:'Állva', name:'Hátrahajlás állva',
+  how:'Állj fel, lábak csípőszélességben, tenyerek a derekadon (ujjak lefelé). Lassan hajolj hátra, amennyire kellemes, majd vissza. Ha a fájdalom a lábba sugárzik vagy erősödik, hagyd ki; ha enyhíti, ez jó jel.',
+  kind:'reps', d:{n:1,r:8}, seq:[['T',2,1],['rest',2,.8]], cue:{up:'Hajolj hátra', hold:'Tartsd', down:'Vissza'},
+  vb:'-150 -152 300 160',
+  P:{rest:STAND({hip:[0,76], torso:90, head:92, lN:[-91,-90], lF:[-89,-88], aN:{ik:[11,72], bend:1}, aF:{ik:[13,73], bend:1}}),
+     A:STAND({hip:[-5,75], torso:74, head:66, face:125, lN:[-95,-92], lF:[-93,-90], aN:{ik:[6,72], bend:1}, aF:{ik:[8,73], bend:1}, hi:['t'], arrows:[{at:'sho', dir:20, len:9}]})}},
 ];
 const PROGS = [
   {id:'hat', jump:'Hát, lapocka, nyak', title:'Hát, lapocka, nyak', sub:'A gyógytornász lapja (háti becsípődés után), kiegészítve a falnál labdás hengerezéssel.'},
-  {id:'derek', jump:'Derék – most fáj', title:'Derék – akut becsípődés', sub:'Kímélő mozgás az első napokra. Általános javaslat, nem a gyógytornászod lapjáról: mutasd meg neki, és ha mást mond, az a mérvadó.'}
+  {id:'derek', jump:'Derék – most fáj', title:'Derék – akut becsípődés', sub:'Kímélő mozgás az első napokra. Általános javaslat, nem a gyógytornászod lapjáról: mutasd meg neki, és ha mást mond, az a mérvadó.'},
+  {id:'iroda', jump:'Irodában, széken', title:'Irodában, széken', sub:'Rövid, kímélő mozgások a munkahelyi székben, és ami ennél is fontosabb: jó ülés és sűrű felállás.'}
 ];
 EX.forEach(ex => { ex.prog = ex.prog || 'hat'; });
 PROGS.forEach(pg => EX.filter(ex => ex.prog === pg.id).forEach((ex, i) => ex.no = i + 1));
@@ -557,7 +603,7 @@ const store = {
   get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
   set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
 };
-const DEF = {rest:15, sw:5, prep:8, tempo:1, beep:true, voice:true, count:true};
+const DEF = {rest:15, sw:5, prep:8, tempo:1, beep:true, voice:true, count:true, remind:30};
 let S = Object.assign({}, DEF, store.get('gt1.set', {}));
 let C = store.get('gt1.cfg', {});
 let LOG = store.get('gt1.log', []);
@@ -701,6 +747,26 @@ function streak(){
   while (s.has(todayKey(d))){ n++; d.setDate(d.getDate()-1); }
   return n;
 }
+const REM = {on:false, next:0};
+function irodaInfo(){
+  return `
+  <div class="info rem"><h4>Felállás-emlékeztető</h4>
+    <p style="margin:0 0 10px;max-width:62ch">Amíg ez az oldal nyitva van, ${S.remind} percenként hangjelzéssel szól, hogy állj fel és mozogj 1–2 percet. Az időköz a Beállításban változtatható.</p>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <button class="${REM.on ? 'ghost danger' : 'go'}" id="rem-btn">${REM.on ? 'Emlékeztető kikapcsolása' : 'Emlékeztető bekapcsolása'}</button>
+      <span id="rem-left" class="num" style="font-size:20px;font-weight:600"></span>
+    </div></div>
+  <div class="info"><h4>Így ülj, ha fáj a derekad</h4><ul>
+    <li>Ülj be mélyen a székbe. A derekadat támassza a háttámla, vagy tegyél a derekad mögé egy kis párnát, összetekert törölközőt.</li>
+    <li>Talp a földön, a csípő a térddel egy szintben vagy kicsit magasabban. Ha kell, emeld a széket, és tegyél valamit a lábad alá.</li>
+    <li>A monitor teteje kb. szemmagasságban legyen, a billentyűzet és az egér közel, a könyök kb. derékszögben, a váll lazán.</li>
+    <li>A legjobb testtartás mindig a következő: 20–30 percenként változtass, 30–45 percenként állj fel, és sétálj 1–2 percet.</li>
+    <li>Telefonálás közben állj fel vagy sétálj. Ha van rá mód, dolgozz időnként pár percet állva.</li></ul></div>
+  <div class="info"><h4>Felállás a székből fájós derékkal</h4><ol>
+    <li>Csússz előre a szék szélére, a lábaidat húzd a tested alá.</li>
+    <li>Tenyér a combokon, a hát egyenes, a hasad enyhén feszítsd meg.</li>
+    <li>Dőlj előre egyenes háttal („orr a lábujjak fölé”), és a lábaiddal tolva, a combodra támaszkodva állj fel. Leülés ugyanígy, fordítva.</li></ol></div>`;
+}
 const DEREK_INFO = `
   <div class="info alert"><h4>Azonnal orvoshoz (ügyelet, 112), ha</h4><ul>
     <li>zsibbad vagy érzéketlen a gát, a fenék vagy a comb belső oldala,</li>
@@ -742,7 +808,7 @@ function renderTorna(){
       <button class="go" data-go="${pg.id}" ${on.length ? '' : 'disabled'}>${IC.play}<span>${doneToday(pg.id) ? 'Újra indítom' : 'Indítás'}</span></button>
       ${doneToday(pg.id) ? '<div class="done-today"><i></i>Ma már megvolt.</div>' : ''}
     </section>
-    ${pg.id === 'derek' ? DEREK_INFO : ''}
+    ${pg.id === 'derek' ? DEREK_INFO : pg.id === 'iroda' ? irodaInfo() : ''}
     ${groups.map(g => `<section class="group"><h3>${esc(g.pos)}</h3><ul class="list">${g.items.map(ex => `
       <li class="ex${isOn(ex) ? '' : ' off'}" data-id="${ex.id}" tabindex="0" aria-label="${esc(ex.name)} részletei">
         <span class="no">${ex.no}</span>
@@ -756,6 +822,8 @@ function renderTorna(){
     <nav class="jump" aria-label="Ugrás a szekcióhoz">${PROGS.map(pg => `<a href="#${pg.id}" data-jump="${pg.id}">${esc(pg.jump)}</a>`).join('')}</nav>
     ${PROGS.map(progHTML).join('')}
     <p class="warn">Fájdalmat okozó mozdulatnál állj le, és kérdezd meg a gyógytornászt. A sorozatok és ismétlések minden gyakorlatnál átírhatók, ha a gyógytornász mást mond.</p>`;
+  const rb = $('#rem-btn');
+  if (rb) rb.onclick = () => { REM.on = !REM.on; REM.next = Date.now() + S.remind*60000; if (REM.on){ ac(); beep(880, .12, .15); } const y = scrollY; renderTorna(); scrollTo(0, y); };
   document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => startSession(EX.filter(ex => ex.prog === b.dataset.go && isOn(ex)), b.dataset.go));
   document.querySelectorAll('[data-jump]').forEach(a => a.onclick = e => {
     e.preventDefault(); const t = document.getElementById(a.dataset.jump);
@@ -787,7 +855,7 @@ function renderNaplo(){
   const avgPain = pains.length ? (pains.reduce((a, l) => a + l.pain, 0)/pains.length).toFixed(1).replace('.', ',') : '–';
   const rows = LOG.slice().reverse().slice(0, 30).map(l => {
     const d = new Date(l.ts);
-    return `<tr><td>${d.toLocaleDateString('hu-HU', {month:'short', day:'numeric', weekday:'short'})}</td><td>${(l.prog || 'hat') === 'derek' ? 'Derék' : 'Hát'}</td><td>${d.toLocaleTimeString('hu-HU', {hour:'2-digit', minute:'2-digit'})}</td>
+    return `<tr><td>${d.toLocaleDateString('hu-HU', {month:'short', day:'numeric', weekday:'short'})}</td><td>${({hat:'Hát', derek:'Derék', iroda:'Iroda'})[l.prog || 'hat']}</td><td>${d.toLocaleTimeString('hu-HU', {hour:'2-digit', minute:'2-digit'})}</td>
       <td>${fmtClock(l.secs)}</td><td>${l.done}/${l.total}</td><td>${l.pain != null ? `<span class="pain" style="${painColor(l.pain)}">${l.pain}</span>` : '–'}</td>
       <td style="white-space:normal;min-width:160px;color:var(--muted)">${esc(l.note || '')}</td></tr>`;
   }).join('');
@@ -823,6 +891,7 @@ function renderBeall(){
     <div class="set">
       <div class="row"><div class="l">Pihenő a sorozatok között</div>${stepper('rest', S.rest, 'mp', 5, 60, 5)}</div>
       <div class="row"><div class="l">Oldalcsere ideje<small>Mindkét oldalas gyakorlatoknál</small></div>${stepper('sw', S.sw, 'mp', 3, 20, 1)}</div>
+      <div class="row"><div class="l">Felállás-emlékeztető gyakorisága<small>Az Irodában szekcióban kapcsolható be</small></div>${stepper('remind', S.remind, 'perc', 15, 90, 5)}</div>
       <div class="row"><div class="l">Felkészülés gyakorlat előtt<small>Ennyi idő van elhelyezkedni</small></div>${stepper('prep', S.prep, 'mp', 3, 30, 1)}</div>
       <div class="row"><div class="l">Ismétlések tempója</div><div class="seg">${tempo.map(([v, l]) => `<button data-tempo="${v}" aria-pressed="${S.tempo === v}">${l}</button>`).join('')}</div></div>
     </div>
@@ -833,7 +902,7 @@ function renderBeall(){
     </div>
     <div class="set"><div class="row"><div class="l">Gyógytornász-féle alapértékek<small>Minden sorozat-, ismétlés- és időbeállítás visszaáll a lap szerintire</small></div>
       <button class="ghost danger" id="reset">Visszaállítás</button></div></div>`;
-  bindSteppers($('#view'), k => S[k], (k, v) => { S[k] = v; saveS(); }, () => 'mp');
+  bindSteppers($('#view'), k => S[k], (k, v) => { S[k] = v; saveS(); if (k === 'remind' && REM.on) REM.next = Date.now() + v*60000; }, k => k === 'remind' ? 'perc' : 'mp');
   document.querySelectorAll('[data-tempo]').forEach(b => b.onclick = () => { S.tempo = +b.dataset.tempo; saveS(); renderBeall(); });
   document.querySelectorAll('[data-tg]').forEach(cb => cb.onchange = () => { S[cb.dataset.tg] = cb.checked; saveS(); if (cb.checked && cb.dataset.tg === 'beep') beep(); if (cb.checked && cb.dataset.tg === 'voice') say('Hang bekapcsolva'); });
   $('#reset').onclick = () => {
@@ -962,7 +1031,7 @@ function exitPlayer(force){
 }
 function finish(){
   const entry = {ts: Date.now(), day: todayKey(), secs: Math.round((Date.now() - R.start)/1000 - R.pausedSecs), done: R.list.length, total: R.list.length,
-    full: R.list.length >= Math.min(R.prog === 'derek' ? 5 : 10, EX.filter(x => isOn(x) && x.prog === R.prog).length), pain:null, note:'', prog:R.prog};
+    full: R.list.length >= Math.min(R.prog === 'hat' ? 10 : 4, EX.filter(x => isOn(x) && x.prog === R.prog).length), pain:null, note:'', prog:R.prog};
   LOG.push(entry); saveL();
   exitPlayer(true);
   beep(660, .15, .2); beep(880, .15, .2, .16); beep(1180, .4, .2, .32); buzz([80, 60, 160]);
@@ -1051,6 +1120,23 @@ function tickPlayer(){
     bars[x].firstChild.style.transform = `scaleX(${Math.min(1, k).toFixed(3)})`;
   }
 }
+function remindTick(){
+  if (!REM.on) return;
+  const left = REM.next - Date.now(), el2 = document.getElementById('rem-left');
+  if (el2) el2.textContent = 'Következő: ' + fmtClock(left/1000);
+  if (left > 0 || R.on) return;
+  REM.next = Date.now() + S.remind*60000;
+  beep(660, .18, .22); beep(880, .18, .22, .25); beep(660, .3, .22, .5); buzz([200, 100, 200]);
+  say('Ideje felállni és mozogni egy kicsit.');
+  const t = document.getElementById('toast'); if (t) t.remove();
+  document.body.insertAdjacentHTML('beforeend', `<div id="toast" role="alert" style="position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;max-width:520px;margin:0 auto;background:var(--ink);color:var(--bg);border-radius:16px;padding:14px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;box-shadow:0 6px 24px rgba(0,0,0,.25)">
+    <b style="flex:1;min-width:180px">Állj fel, sétálj 1–2 percet.</b>
+    <button class="go" id="toast-go" style="padding:10px 18px;font-size:15px">Irodai torna</button>
+    <button class="ghost" id="toast-x" style="color:var(--bg);border-color:var(--muted)">Megvolt</button></div>`);
+  $('#toast-go').onclick = () => { $('#toast').remove(); startSession(EX.filter(x => x.prog === 'iroda' && isOn(x)), 'iroda'); };
+  $('#toast-x').onclick = () => $('#toast').remove();
+}
+setInterval(remindTick, 1000);
 function frame(){
   try {
     if (R.on) tickPlayer();
@@ -1058,9 +1144,9 @@ function frame(){
   } catch(err){ console.error(err); }
   requestAnimationFrame(frame);
 }
-if (/^#(derek|hat)$/.test(location.hash)) view = 'torna';
+if (/^#(derek|hat|iroda)$/.test(location.hash)) view = 'torna';
 render();
-if (/^#(derek|hat)$/.test(location.hash)){ const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
+if (/^#(derek|hat|iroda)$/.test(location.hash)){ const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
 requestAnimationFrame(frame);
 </script>
 <!--wrap-->
